@@ -11,6 +11,12 @@ defmodule AshDesk.Organizations do
       define :delete_organization, action: :destroy
     end
 
-    resource AshDesk.Organizations.Membership
+    resource AshDesk.Organizations.Membership do
+      define :create_membership, action: :create
+      define :list_memberships, action: :read
+      define :get_membership_by_id, action: :read, get_by: :id
+      define :update_membership, action: :update
+      define :delete_membership, action: :destroy
+    end
   end
 end

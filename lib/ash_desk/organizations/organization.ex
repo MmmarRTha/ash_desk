@@ -3,6 +3,7 @@ defmodule AshDesk.Organizations.Organization do
     otp_app: :ash_desk,
     domain: AshDesk.Organizations,
     data_layer: AshPostgres.DataLayer,
+    authorizers: [Ash.Policy.Authorizer],
     extensions: [AshSlug]
 
   postgres do
@@ -22,8 +23,20 @@ defmodule AshDesk.Organizations.Organization do
     update :update do
       primary? true
       accept [:name]
-      require_atomic? false
-      change slugify(:name, into: :slug)
+    end
+  end
+
+  policies do
+    policy action_type(:create) do
+      authorize_if actor_present()
+    end
+
+    policy action_type(:read) do
+      authorize_if expr(exists(memberships, user_id == ^actor(:id)))
+    end
+
+    policy action_type([:update, :destroy]) do
+      authorize_if expr(exists(memberships, user_id == ^actor(:id) and role == :admin))
     end
   end
 
