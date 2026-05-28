@@ -1,0 +1,23 @@
+<Layouts.app flash={@flash} current_scope={@current_user}>
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">{@org.name} — Inbox</h1>
+  </div>
+
+  <div :if={@conversations == []} class="text-center py-12 opacity-50">
+    No conversations yet.
+  </div>
+
+  <div :for={conversation <- @conversations} class="card bg-base-200 p-4 mb-3">
+    <.link navigate={~p"/inbox/#{conversation.id}"} class="block">
+      <div class="flex justify-between items-center">
+        <span class="font-medium">
+          {(conversation.assigned_agent && conversation.assigned_agent.email) || "Unassigned"}
+        </span>
+        <span class="badge">{conversation.status}</span>
+      </div>
+      <div class="text-sm opacity-70 mt-1">
+        Created: {conversation.created_at}
+      </div>
+    </.link>
+  </div>
+</Layouts.app>

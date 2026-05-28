@@ -26,7 +26,8 @@ defmodule AshDesk.Repo.Migrations.AddMessagesTable do
             name: "messages_conversation_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :sender_id,
           references(:users,
@@ -34,7 +35,8 @@ defmodule AshDesk.Repo.Migrations.AddMessagesTable do
             name: "messages_sender_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
     end
   end
 
