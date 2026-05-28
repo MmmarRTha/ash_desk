@@ -1,0 +1,18 @@
+defmodule AshDesk.Support do
+  use Ash.Domain,
+    otp_app: :ash_desk
+
+  resources do
+    resource AshDesk.Support.Conversation do
+      define :create_conversation, action: :create
+      define :get_conversation_by_id, action: :read, get_by: :id
+      define :list_conversations, action: :read
+      define :update_conversation, action: :update
+    end
+
+    resource AshDesk.Support.Message do
+      define :create_message, action: :create
+      define :list_messages, action: :read
+    end
+  end
+end
