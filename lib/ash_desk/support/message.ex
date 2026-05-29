@@ -12,6 +12,13 @@ defmodule AshDesk.Support.Message do
 
   actions do
     defaults [:read, create: [:body, :conversation_id, :sender_id]]
+
+    read :list_messages_for_conversation do
+      description "List messages for a specific conversation"
+      argument :conversation_id, :uuid, allow_nil?: false
+      filter expr(conversation_id == ^arg(:conversation_id))
+      prepare build(load: [:sender])
+    end
   end
 
   policies do
