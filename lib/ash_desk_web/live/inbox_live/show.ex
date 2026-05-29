@@ -6,49 +6,101 @@ defmodule AshDeskWeb.InboxLive.Show do
 
   @impl true
   def mount(_params, _session, socket) do
+    current_user = socket.assigns.current_user
+
+    socket =
+      case AshDesk.Organizations.list_organizations(actor: current_user) do
+        {:ok, [org | _]} ->
+          assign(socket, :org, org)
+
+        _ ->
+          socket
+          |> put_flash(:error, "No organization found")
+          |> push_navigate(to: ~p"/inbox")
+      end
+
     {:ok, socket}
   end
 
   @impl true
-  def handle_params(params, _uri, socket) do
+  def render(assigns) do
+    ~H"""
+    <Layouts.app flash={@flash} current_scope={@current_user}>
+      <.link navigate={~p"/inbox"} class="text-sm opacity-70 hover:opacity-100">
+        ← Back to Inbox
+      </.link>
+
+      <h1 class="text-2xl font-bold mt-4 mb-6">{@org.name} — Conversation</h1>
+
+      <.async_result :let={messages} assign={@messages}>
+        <:loading>
+          <div class="text-center py-8 opacity-50">Loading messages...</div>
+        </:loading>
+
+        <:failed :let={_reason}>
+          <div class="text-center py-8 opacity-50">Failed to load messages.</div>
+        </:failed>
+
+        <div class="space-y-3 mb-8">
+          <div :for={message <- messages} class="chat">
+            <div class="chat-bubble">
+              <div class="text-xs font-bold">
+                {if message.sender.email == @current_user.email, do: "Me", else: message.sender.email}
+              </div>
+              <p>{message.body}</p>
+            </div>
+          </div>
+
+          <div :if={messages == []} class="text-center py-8 opacity-50">
+            No messages yet. Send the first message!
+          </div>
+        </div>
+      </.async_result>
+
+      <.form for={@message_form} id="send-message-form" phx-submit="send_message">
+        <.input field={@message_form[:body]} type="textarea" placeholder="Type your message..." />
+        <.button class="mt-2">Send</.button>
+      </.form>
+    </Layouts.app>
+    """
+  end
+
+  @impl true
+  def handle_params(%{"id" => conversation_id}, _uri, socket) do
     current_user = socket.assigns.current_user
-    conversation_id = params["id"]
+    org = socket.assigns.org
 
-    case AshDesk.Organizations.list_organizations(actor: current_user) do
-      {:ok, [org | _]} ->
-        case AshDesk.Support.get_conversation_by_id(conversation_id,
-               actor: current_user,
-               tenant: org.id
-             ) do
-          {:ok, conversation} ->
-            {:ok, all_messages} =
-              AshDesk.Support.list_messages(
-                actor: current_user,
-                load: [:sender],
-                authorize?: false
-              )
+    case AshDesk.Support.get_conversation_by_id(conversation_id,
+           actor: current_user,
+           tenant: org.id
+         ) do
+      {:ok, conversation} ->
+        socket =
+          socket
+          |> assign(:conversation, conversation)
+          |> assign(:message_form, to_form(%{"body" => ""}))
 
-            messages = Enum.filter(all_messages, &(&1.conversation_id == conversation_id))
-            message_form = to_form(%{"body" => ""})
+        socket =
+          if connected?(socket) do
+            assign_async(socket, :messages, fn ->
+              {:ok, messages} =
+                AshDesk.Support.list_messages_for_conversation(
+                  %{conversation_id: conversation_id},
+                  actor: current_user
+                )
 
-            {:noreply,
-             socket
-             |> assign(:org, org)
-             |> assign(:conversation, conversation)
-             |> assign(:messages, messages)
-             |> assign(:message_form, message_form)}
+              {:ok, %{messages: messages}}
+            end)
+          else
+            assign(socket, :messages, Phoenix.LiveView.AsyncResult.loading())
+          end
 
-          {:error, _reason} ->
-            {:noreply,
-             socket
-             |> put_flash(:error, "Conversation not found")
-             |> push_navigate(to: ~p"/inbox")}
-        end
+        {:noreply, socket}
 
-      _ ->
+      {:error, _reason} ->
         {:noreply,
          socket
-         |> put_flash(:error, "No organization found")
+         |> put_flash(:error, "Conversation not found")
          |> push_navigate(to: ~p"/inbox")}
     end
   end
@@ -63,14 +115,15 @@ defmodule AshDeskWeb.InboxLive.Show do
            actor: current_user
          ) do
       {:ok, _message} ->
-        {:ok, all_messages} =
-          AshDesk.Support.list_messages(actor: current_user, load: [:sender], authorize?: false)
-
-        messages = Enum.filter(all_messages, &(&1.conversation_id == conversation.id))
+        {:ok, messages} =
+          AshDesk.Support.list_messages_for_conversation(
+            %{conversation_id: conversation.id},
+            actor: current_user
+          )
 
         {:noreply,
          socket
-         |> assign(:messages, messages)
+         |> assign(:messages, Phoenix.LiveView.AsyncResult.ok(socket.assigns.messages, messages))
          |> assign(:message_form, to_form(%{"body" => ""}))}
 
       {:error, reason} ->

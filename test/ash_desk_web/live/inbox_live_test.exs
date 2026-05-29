@@ -46,7 +46,9 @@ defmodule AshDeskWeb.InboxLiveTest do
       conn = sign_in(conn, user)
       {:ok, view, _html} = live(conn, ~p"/inbox")
 
-      assert has_element?(view, "h1", "Acme — Inbox")
+      html = render_async(view)
+
+      assert html =~ "Acme — Inbox"
       assert has_element?(view, ~s/a[href="#{~p"/inbox/#{conversation.id}"}"]/)
     end
   end
@@ -64,15 +66,19 @@ defmodule AshDeskWeb.InboxLiveTest do
       conn = sign_in(conn, user)
       {:ok, view, _html} = live(conn, ~p"/inbox/#{conversation.id}")
 
+      html = render_async(view)
+
       assert has_element?(view, ~s/a[href="#{~p"/inbox"}"]/)
-      assert has_element?(view, "p", "Hello! Need help.")
-      assert render(view) =~ "Me"
+      assert html =~ "Hello! Need help."
+      assert html =~ "Me"
       assert has_element?(view, "#send-message-form")
     end
 
     test "user can send a message", %{conn: conn, user: user, conversation: conversation} do
       conn = sign_in(conn, user)
       {:ok, view, _html} = live(conn, ~p"/inbox/#{conversation.id}")
+
+      render_async(view)
 
       view
       |> element("#send-message-form")
