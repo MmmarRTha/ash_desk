@@ -20,7 +20,12 @@ defmodule AshDesk.Organizations.Membership do
     end
 
     policy action_type([:create, :update, :destroy]) do
-      authorize_if actor_present()
+      authorize_if expr(
+                     exists(
+                       organization.memberships,
+                       user_id == ^actor(:id) and role == :admin
+                     )
+                   )
     end
   end
 
