@@ -12,12 +12,14 @@ defmodule AshDeskWeb.InboxLive.Index do
       if connected?(socket) do
         current_user = socket.assigns.current_user
 
-        assign_async(socket, :inbox_data, fn ->
-          data = fetch_inbox_data(current_user)
-          {:ok, %{inbox_data: data}}
-        end)
+        socket
+        |> assign(:org, nil)
+        |> stream(:conversations, [])
+        |> start_async(:fetch_inbox, fn -> fetch_inbox_data(current_user) end)
       else
-        assign(socket, :inbox_data, Phoenix.LiveView.AsyncResult.loading())
+        socket
+        |> assign(:org, nil)
+        |> stream(:conversations, [])
       end
 
     {:ok, socket}
@@ -27,32 +29,21 @@ defmodule AshDeskWeb.InboxLive.Index do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_user}>
-      <.async_result :let={%{org: org, conversations: conversations}} assign={@inbox_data}>
-        <:loading>
-          <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold">Loading...</h1>
-          </div>
-          <div class="text-center py-12 opacity-50">Loading conversations...</div>
-        </:loading>
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">
+          {if @org, do: "#{@org.name} — Inbox", else: "Loading..."}
+        </h1>
+      </div>
 
-        <:failed :let={_reason}>
-          <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold">Error</h1>
-          </div>
-          <div class="text-center py-12 opacity-50">Failed to load inbox.</div>
-        </:failed>
-
-        <div class="flex justify-between items-center mb-6">
-          <h1 class="text-2xl font-bold">
-            {if org, do: "#{org.name} — Inbox", else: "Inbox"}
-          </h1>
-        </div>
-
-        <div :if={conversations == []} class="text-center py-12 opacity-50">
+      <div id="conversations" phx-update="stream">
+        <div id="conversations-empty" class="hidden only:block text-center py-12 opacity-50">
           No conversations yet.
         </div>
-
-        <div :for={conversation <- conversations} class="card bg-base-200 p-4 mb-3">
+        <div
+          :for={{id, conversation} <- @streams.conversations}
+          id={id}
+          class="card bg-base-200 p-4 mb-3"
+        >
           <.link navigate={~p"/inbox/#{conversation.id}"} class="block">
             <div class="flex justify-between items-center">
               <span class="font-medium">
@@ -65,13 +56,25 @@ defmodule AshDeskWeb.InboxLive.Index do
             </div>
           </.link>
         </div>
-      </.async_result>
+      </div>
     </Layouts.app>
     """
   end
 
   @impl true
   def handle_params(_params, _uri, socket) do
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_async(:fetch_inbox, {:ok, %{org: org, conversations: conversations}}, socket) do
+    {:noreply,
+     socket
+     |> assign(:org, org)
+     |> stream(:conversations, conversations, reset: true)}
+  end
+
+  def handle_async(:fetch_inbox, {:exit, _reason}, socket) do
     {:noreply, socket}
   end
 

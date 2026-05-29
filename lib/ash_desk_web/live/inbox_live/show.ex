@@ -32,30 +32,19 @@ defmodule AshDeskWeb.InboxLive.Show do
 
       <h1 class="text-2xl font-bold mt-4 mb-6">{@org.name} — Conversation</h1>
 
-      <.async_result :let={messages} assign={@messages}>
-        <:loading>
-          <div class="text-center py-8 opacity-50">Loading messages...</div>
-        </:loading>
-
-        <:failed :let={_reason}>
-          <div class="text-center py-8 opacity-50">Failed to load messages.</div>
-        </:failed>
-
-        <div class="space-y-3 mb-8">
-          <div :for={message <- messages} class="chat">
-            <div class="chat-bubble">
-              <div class="text-xs font-bold">
-                {if message.sender.email == @current_user.email, do: "Me", else: message.sender.email}
-              </div>
-              <p>{message.body}</p>
+      <div id="messages" phx-update="stream" class="space-y-3 mb-8">
+        <div id="messages-empty" class="hidden only:block text-center py-8 opacity-50">
+          No messages yet. Send the first message!
+        </div>
+        <div :for={{id, message} <- @streams.messages} id={id} class="chat">
+          <div class="chat-bubble">
+            <div class="text-xs font-bold">
+              {if message.sender.email == @current_user.email, do: "Me", else: message.sender.email}
             </div>
-          </div>
-
-          <div :if={messages == []} class="text-center py-8 opacity-50">
-            No messages yet. Send the first message!
+            <p>{message.body}</p>
           </div>
         </div>
-      </.async_result>
+      </div>
 
       <.form for={@message_form} id="send-message-form" phx-submit="send_message">
         <.input field={@message_form[:body]} type="textarea" placeholder="Type your message..." />
@@ -79,20 +68,21 @@ defmodule AshDeskWeb.InboxLive.Show do
           socket
           |> assign(:conversation, conversation)
           |> assign(:message_form, to_form(%{"body" => ""}))
+          |> stream(:messages, [])
 
         socket =
           if connected?(socket) do
-            assign_async(socket, :messages, fn ->
+            start_async(socket, :fetch_messages, fn ->
               {:ok, messages} =
                 AshDesk.Support.list_messages_for_conversation(
                   %{conversation_id: conversation_id},
                   actor: current_user
                 )
 
-              {:ok, %{messages: messages}}
+              %{messages: messages}
             end)
           else
-            assign(socket, :messages, Phoenix.LiveView.AsyncResult.loading())
+            socket
           end
 
         {:noreply, socket}
@@ -114,20 +104,29 @@ defmodule AshDeskWeb.InboxLive.Show do
            %{body: body, conversation_id: conversation.id, sender_id: current_user.id},
            actor: current_user
          ) do
-      {:ok, _message} ->
-        {:ok, messages} =
-          AshDesk.Support.list_messages_for_conversation(
-            %{conversation_id: conversation.id},
-            actor: current_user
+      {:ok, message} ->
+        {:ok, message} =
+          Ash.load(message, [:sender],
+            actor: current_user,
+            authorize?: false
           )
 
         {:noreply,
          socket
-         |> assign(:messages, Phoenix.LiveView.AsyncResult.ok(socket.assigns.messages, messages))
+         |> stream_insert(:messages, message)
          |> assign(:message_form, to_form(%{"body" => ""}))}
 
       {:error, reason} ->
         {:noreply, put_flash(socket, :error, "Failed to send message: #{inspect(reason)}")}
     end
+  end
+
+  @impl true
+  def handle_async(:fetch_messages, {:ok, %{messages: messages}}, socket) do
+    {:noreply, stream(socket, :messages, messages, reset: true)}
+  end
+
+  def handle_async(:fetch_messages, {:exit, _reason}, socket) do
+    {:noreply, socket}
   end
 end
