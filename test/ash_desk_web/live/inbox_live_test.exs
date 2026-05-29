@@ -18,7 +18,8 @@ defmodule AshDeskWeb.InboxLiveTest do
     {:ok, org} = Organizations.create_organization(%{name: "Acme"}, actor: user)
 
     {:ok, _membership} =
-      Organizations.create_membership(%{user_id: user.id, organization_id: org.id, role: :admin},
+      Organizations.create_membership(
+        %{user_id: user.id, organization_id: org.id, role: :admin},
         actor: user,
         tenant: org.id
       )
@@ -59,7 +60,7 @@ defmodule AshDeskWeb.InboxLiveTest do
     test "shows conversation messages", %{conn: conn, user: user, conversation: conversation} do
       {:ok, _message} =
         Support.create_message(
-          %{body: "Hello! Need help.", conversation_id: conversation.id, sender_id: user.id},
+          %{body: "Hello! Need help.", conversation_id: conversation.id},
           actor: user
         )
 

@@ -18,22 +18,6 @@ defmodule AshDesk.Organizations.Organization do
       primary? true
       accept [:name]
       change slugify(:name, into: :slug)
-
-      after_action(fn
-        %{id: org_id} = org, %{context: %{actor: %{id: user_id}}} ->
-          Ash.create(
-            AshDesk.Organizations.Membership,
-            %{
-              user_id: user_id,
-              organization_id: org_id,
-              role: :admin
-            }, actor: %{id: user_id}, authorize?: false, tenant: org_id)
-
-          {:ok, org}
-
-        org, _changeset ->
-          {:ok, org}
-      end)
     end
 
     update :update do

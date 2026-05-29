@@ -42,8 +42,7 @@ defmodule AshDesk.Support.MessageTest do
         Support.create_message(
           %{
             body: "Hello! Need help with my order.",
-            conversation_id: conversation.id,
-            sender_id: user.id
+            conversation_id: conversation.id
           },
           actor: user
         )
@@ -90,8 +89,7 @@ defmodule AshDesk.Support.MessageTest do
         Support.create_message(
           %{
             body: "Secret message",
-            conversation_id: conversation.id,
-            sender_id: user1.id
+            conversation_id: conversation.id
           },
           actor: user1
         )
@@ -163,8 +161,7 @@ defmodule AshDesk.Support.MessageTest do
         Support.create_message(
           %{
             body: "First message",
-            conversation_id: conversation.id,
-            sender_id: user.id
+            conversation_id: conversation.id
           },
           actor: user
         )
@@ -173,8 +170,7 @@ defmodule AshDesk.Support.MessageTest do
         Support.create_message(
           %{
             body: "Second message",
-            conversation_id: conversation.id,
-            sender_id: user.id
+            conversation_id: conversation.id
           },
           actor: user
         )

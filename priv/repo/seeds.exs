@@ -19,13 +19,19 @@ users =
 
 {:ok, org} = Organizations.create_organization(%{name: "Acme Inc"}, actor: agent1)
 
-for user <- [agent1, agent2] do
-  {:ok, _membership} =
-    Organizations.create_membership(%{user_id: user.id, organization_id: org.id, role: :agent},
-      actor: user,
-      tenant: org.id
-    )
-end
+{:ok, _membership} =
+  Organizations.create_membership(
+    %{user_id: agent1.id, organization_id: org.id, role: :admin},
+    actor: agent1,
+    tenant: org.id
+  )
+
+{:ok, _membership} =
+  Organizations.create_membership(
+    %{user_id: agent2.id, organization_id: org.id, role: :agent},
+    actor: agent1,
+    tenant: org.id
+  )
 
 {:ok, conversation} =
   Support.create_conversation(
@@ -35,16 +41,17 @@ end
   )
 
 messages = [
-  %{body: "Hi, I need help with my order #1234.", sender_id: agent2.id},
-  %{body: "Sure! Let me look that up. What seems to be the issue?", sender_id: agent1.id},
-  %{body: "The package hasn't arrived yet and it's been two weeks.", sender_id: agent2.id}
+  %{body: "Hi, I need help with my order #1234.", actor: agent2},
+  %{body: "Sure! Let me look that up. What seems to be the issue?", actor: agent1},
+  %{body: "The package hasn't arrived yet and it's been two weeks.", actor: agent2}
 ]
 
 for msg <- messages do
   {:ok, _message} =
     Support.create_message(
-      %{body: msg.body, conversation_id: conversation.id, sender_id: msg.sender_id},
-      actor: agent1
+      %{body: msg.body, conversation_id: conversation.id},
+      actor: msg.actor,
+      tenant: org.id
     )
 end
 

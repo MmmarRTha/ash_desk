@@ -38,8 +38,13 @@ defmodule AshDeskWeb.InboxLive.Show do
         </div>
         <div :for={{id, message} <- @streams.messages} id={id} class="chat">
           <div class="chat-bubble">
-            <div class="text-xs font-bold">
-              {if message.sender.email == @current_user.email, do: "Me", else: message.sender.email}
+            <div class="flex justify-between items-center">
+              <div class="text-xs font-bold">
+                {if message.sender.email == @current_user.email, do: "Me", else: message.sender.email}
+              </div>
+              <div class="text-xs opacity-50">
+                {relative_time(message.created_at)}
+              </div>
             </div>
             <p>{message.body}</p>
           </div>
@@ -129,4 +134,18 @@ defmodule AshDeskWeb.InboxLive.Show do
   def handle_async(:fetch_messages, {:exit, _reason}, socket) do
     {:noreply, socket}
   end
+
+  defp relative_time(%DateTime{} = datetime) do
+    diff = DateTime.diff(DateTime.utc_now(), datetime, :second)
+
+    cond do
+      diff < 60 -> " just now"
+      diff < 3600 -> " #{div(diff, 60)} min ago"
+      diff < 86400 -> " #{div(diff, 3600)} hour ago"
+      diff < 604_800 -> " #{div(diff, 86400)} day ago"
+      true -> Calendar.strftime(datetime, "%b %d")
+    end
+  end
+
+  defp relative_time(_), do: ""
 end

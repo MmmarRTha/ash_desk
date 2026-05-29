@@ -42,6 +42,7 @@ defmodule AshDesk.Support.Message do
     attribute :body, :string do
       allow_nil? false
       public? true
+      constraints max_length: 500
     end
 
     create_timestamp :created_at
