@@ -101,7 +101,7 @@ defmodule AshDeskWeb.InboxLive.Show do
     conversation = socket.assigns.conversation
 
     case AshDesk.Support.create_message(
-           %{body: body, conversation_id: conversation.id, sender_id: current_user.id},
+           %{body: body, conversation_id: conversation.id},
            actor: current_user
          ) do
       {:ok, message} ->

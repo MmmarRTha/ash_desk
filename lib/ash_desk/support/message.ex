@@ -11,7 +11,12 @@ defmodule AshDesk.Support.Message do
   end
 
   actions do
-    defaults [:read, create: [:body, :conversation_id, :sender_id]]
+    defaults [:read]
+
+    create :create do
+      accept [:body, :conversation_id]
+      change AshDesk.Support.Changes.SetSenderChange
+    end
 
     read :list_messages_for_conversation do
       description "List messages for a specific conversation"
