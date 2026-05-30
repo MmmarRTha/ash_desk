@@ -85,7 +85,7 @@ defmodule AshDeskWeb.InboxLiveTest do
       |> element("#send-message-form")
       |> render_submit(%{body: "New message body"})
 
-      assert has_element?(view, "p", "New message body")
+      assert has_element?(view, ".chat-bubble", "New message body")
     end
 
     test "redirects to inbox for non-existent conversation", %{conn: conn, user: user} do

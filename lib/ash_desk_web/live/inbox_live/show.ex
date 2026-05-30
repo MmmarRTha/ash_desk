@@ -26,17 +26,20 @@ defmodule AshDeskWeb.InboxLive.Show do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_user}>
-      <.link navigate={~p"/inbox"} class="text-sm opacity-70 hover:opacity-100">
-        ← Back to Inbox
+      <.link navigate={~p"/inbox"} class="text-sm opacity-70 hover:opacity-100 inline-flex items-center gap-1 mb-4">
+        <.icon name="hero-arrow-left" class="size-4" /> Back to Inbox
       </.link>
 
-      <div class="flex items-center justify-between mt-4 mb-6">
-        <h1 class="text-2xl font-bold">{@org.name} — Conversation</h1>
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h1 class="text-2xl font-bold">{@org.name}</h1>
+          <p class="text-sm opacity-50">Conversation</p>
+        </div>
 
         <div :if={@is_admin} class="flex items-center gap-2">
-          <label class="text-sm opacity-70">Assign to:</label>
+          <.icon name="hero-user-group" class="size-4 opacity-70" />
           <form id="assign-agent-form" phx-change="assign_agent">
-            <select name="agent_id" class="select select-bordered select-sm">
+            <select name="agent_id" class="select select-bordered select-sm select-primary">
               <option value="">Unassigned</option>
               <option
                 :for={agent <- @agents}
@@ -50,33 +53,45 @@ defmodule AshDeskWeb.InboxLive.Show do
         </div>
       </div>
 
-      <div id="messages" phx-update="stream" class="space-y-3 mb-8">
-        <div id="messages-empty" class="hidden only:block text-center py-8 opacity-50">
-          No messages yet. Send the first message!
+      <div id="messages" phx-update="stream" class="space-y-4 mb-4 min-h-[200px]">
+        <div id="messages-empty" class="hidden only:block text-center py-12">
+          <.icon name="hero-chat-bubble-left-right" class="size-12 opacity-30 mx-auto mb-3" />
+          <p class="opacity-50">No messages yet. Send the first message!</p>
         </div>
-        <div :for={{id, message} <- @streams.messages} id={id} class="chat">
-          <div class="chat-bubble">
-            <div class="flex justify-between items-center">
-              <div class="text-xs font-bold">
-                {if message.sender.email == @current_user.email, do: "Me", else: message.sender.email}
-              </div>
-              <div class="text-xs opacity-50">
-                {relative_time(message.created_at)}
-              </div>
-            </div>
-            <p>{message.body}</p>
+        <div :for={{id, message} <- @streams.messages} id={id} class={[
+          "chat",
+          message.sender.email == @current_user.email && "chat-end",
+          message.sender.email != @current_user.email && "chat-start"
+        ]}>
+          <div class="chat-header mb-1">
+            <span class="text-xs font-bold">
+              {if message.sender.email == @current_user.email, do: "Me", else: message.sender.email}
+            </span>
+            <time class="text-xs opacity-50">{relative_time(message.created_at)}</time>
+          </div>
+          <div class={[
+            "chat-bubble max-w-[80%]",
+            message.sender.email == @current_user.email && "chat-bubble-primary text-primary-content",
+            message.sender.email != @current_user.email && "chat-bubble-base-300"
+          ]}>
+            {message.body}
           </div>
         </div>
       </div>
 
-      <.form for={@message_form} id="send-message-form" phx-submit="send_message">
-        <.input
-          id={"message-body-#{Enum.count(@streams.messages)}"}
-          field={@message_form[:body]}
-          type="textarea"
-          placeholder="Type your message..."
-        />
-        <.button class="mt-2" phx-disable-with="Sending...">Send</.button>
+      <.form for={@message_form} id="send-message-form" phx-submit="send_message" class="sticky bottom-0 bg-base-100 pt-4 pb-2 border-t border-base-300">
+        <div class="flex gap-2 items-end">
+          <.input
+            id={"message-body-#{Enum.count(@streams.messages)}"}
+            field={@message_form[:body]}
+            type="textarea"
+            placeholder="Type your message..."
+            class="flex-1"
+          />
+          <.button class="btn btn-primary btn-circle shrink-0" phx-disable-with="...">
+            <.icon name="hero-paper-airplane" class="size-5" />
+          </.button>
+        </div>
       </.form>
     </Layouts.app>
     """
