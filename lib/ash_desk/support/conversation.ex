@@ -17,6 +17,13 @@ defmodule AshDesk.Support.Conversation do
       create: [:organization_id, :assigned_agent_id, :status],
       update: [:assigned_agent_id, :status]
     ]
+
+    read :list_assigned_to do
+      description "List conversations assigned to a specific agent"
+      argument :agent_id, :uuid, allow_nil?: false
+      filter expr(assigned_agent_id == ^arg(:agent_id))
+      prepare build(load: [:assigned_agent])
+    end
   end
 
   policies do

@@ -74,6 +74,7 @@ defmodule AshDeskWeb.InboxLive.Show do
           id={"message-body-#{Enum.count(@streams.messages)}"}
           field={@message_form[:body]}
           type="textarea"
+          placeholder="Type your message..."
         />
         <.button class="mt-2" phx-disable-with="Sending...">Send</.button>
       </.form>
@@ -127,12 +128,7 @@ defmodule AshDeskWeb.InboxLive.Show do
            actor: current_user
          ) do
       {:ok, message} ->
-        {:ok, message} =
-          Ash.load(
-            message,
-            [:sender],
-            actor: current_user
-          )
+        {:ok, message} = Ash.load(message, [:sender], actor: current_user)
 
         {:noreply,
          socket

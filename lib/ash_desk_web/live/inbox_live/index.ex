@@ -81,19 +81,41 @@ defmodule AshDeskWeb.InboxLive.Index do
   defp fetch_inbox_data(current_user) do
     case AshDesk.Organizations.list_organizations(actor: current_user) do
       {:ok, [org | _]} ->
-        case AshDesk.Support.list_conversations(actor: current_user, tenant: org.id) do
-          {:ok, conversations} ->
-            {:ok, conversations} =
-              Ash.load(conversations, [:assigned_agent],
-                actor: current_user,
-                authorize?: false
-              )
+        {:ok, memberships} =
+          AshDesk.Organizations.list_memberships(
+            actor: current_user,
+            tenant: org.id,
+            load: [:user]
+          )
 
-            %{org: org, conversations: conversations}
+        current_membership = Enum.find(memberships, &(&1.user_id == current_user.id))
+        is_admin = current_membership && current_membership.role == :admin
 
-          {:error, _error} ->
-            %{org: org, conversations: []}
-        end
+        conversations =
+          if is_admin do
+            case AshDesk.Support.list_conversations(actor: current_user, tenant: org.id) do
+              {:ok, convs} ->
+                {:ok, loaded} = Ash.load(convs, [:assigned_agent], actor: current_user)
+                loaded
+
+              {:error, _} ->
+                []
+            end
+          else
+            case AshDesk.Support.list_conversations_for_agent(
+                   %{agent_id: current_user.id},
+                   actor: current_user,
+                   tenant: org.id
+                 ) do
+              {:ok, convs} ->
+                convs
+
+              {:error, _} ->
+                []
+            end
+          end
+
+        %{org: org, conversations: conversations}
 
       _ ->
         %{org: nil, conversations: []}

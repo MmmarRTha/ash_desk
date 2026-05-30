@@ -10,6 +10,7 @@ defmodule AshDesk.Support do
       define :create_conversation, action: :create
       define :get_conversation_by_id, action: :read, get_by: :id
       define :list_conversations, action: :read
+      define :list_conversations_for_agent, action: :list_assigned_to
       define :update_conversation, action: :update
     end
 

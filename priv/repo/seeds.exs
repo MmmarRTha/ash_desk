@@ -40,6 +40,13 @@ users =
     tenant: org.id
   )
 
+{:ok, _unassigned_conv} =
+  Support.create_conversation(
+    %{organization_id: org.id, assigned_agent_id: nil},
+    actor: agent1,
+    tenant: org.id
+  )
+
 messages = [
   %{body: "Hi, I need help with my order #1234.", actor: agent2},
   %{body: "Sure! Let me look that up. What seems to be the issue?", actor: agent1},
