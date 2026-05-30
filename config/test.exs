@@ -11,8 +11,6 @@ config :ash, policies: [show_policy_breakdowns?: true], disable_async?: true
 config :ash_desk, AshDesk.Repo,
   username: "backend_mn",
   password: "fedoradb",
-  username: "postgres",
-  password: "postgres",
   hostname: "localhost",
   database: "ash_desk_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,

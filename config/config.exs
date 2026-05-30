@@ -57,7 +57,7 @@ config :spark,
 config :ash_desk,
   ecto_repos: [AshDesk.Repo],
   generators: [timestamp_type: :utc_datetime],
-  ash_domains: [AshDesk.Organizations, AshDesk.Accounts]
+  ash_domains: [AshDesk.Support, AshDesk.Organizations, AshDesk.Accounts]
 
 # Configure the endpoint
 config :ash_desk, AshDeskWeb.Endpoint,
