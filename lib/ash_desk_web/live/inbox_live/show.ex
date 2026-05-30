@@ -179,6 +179,11 @@ defmodule AshDeskWeb.InboxLive.Show do
               meta_topic
             )
 
+            Phoenix.PubSub.subscribe(
+              AshDesk.PubSub,
+              presence_topic
+            )
+
             AshDeskWeb.Presence.track(
               self(),
               presence_topic,
