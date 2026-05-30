@@ -26,7 +26,10 @@ defmodule AshDeskWeb.InboxLive.Show do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_user}>
-      <.link navigate={~p"/inbox"} class="text-sm opacity-70 hover:opacity-100 inline-flex items-center gap-1 mb-4">
+      <.link
+        navigate={~p"/inbox"}
+        class="text-sm opacity-70 hover:opacity-100 inline-flex items-center gap-1 mb-4"
+      >
         <.icon name="hero-arrow-left" class="size-4" /> Back to Inbox
       </.link>
 
@@ -36,20 +39,48 @@ defmodule AshDeskWeb.InboxLive.Show do
           <p class="text-sm opacity-50">Conversation</p>
         </div>
 
-        <div :if={@is_admin} class="flex items-center gap-2">
-          <.icon name="hero-user-group" class="size-4 opacity-70" />
-          <form id="assign-agent-form" phx-change="assign_agent">
-            <select name="agent_id" class="select select-bordered select-sm select-primary">
-              <option value="">Unassigned</option>
-              <option
-                :for={agent <- @agents}
-                value={agent.id}
-                selected={agent.id == @conversation.assigned_agent_id}
+        <div class="flex items-center gap-4">
+          <%!-- Online presence indicator --%>
+          <div :if={@online_users != %{}} class="flex items-center gap-2">
+            <div class="flex -space-x-2">
+              <div
+                :for={{_user_id, user} <- Enum.take(@online_users, 3)}
+                class="relative"
               >
-                {agent.email}
-              </option>
-            </select>
-          </form>
+                <div class="avatar placeholder">
+                  <div class="bg-success text-success-content rounded-full w-8 ring-2 ring-base-100">
+                    <span class="text-xs">
+                      {String.upcase(String.first(List.first(user.metas).email) || "U")}
+                    </span>
+                  </div>
+                </div>
+                <span class="absolute bottom-0 right-0 size-2.5 bg-success rounded-full ring-2 ring-base-100">
+                </span>
+              </div>
+            </div>
+            <span :if={map_size(@online_users) > 3} class="text-xs text-success font-medium">
+              +{map_size(@online_users) - 3} online
+            </span>
+            <span :if={map_size(@online_users) <= 3} class="text-xs text-success font-medium">
+              {map_size(@online_users)} online
+            </span>
+          </div>
+
+          <div :if={@is_admin} class="flex items-center gap-2">
+            <.icon name="hero-user-group" class="size-4 opacity-70" />
+            <form id="assign-agent-form" phx-change="assign_agent">
+              <select name="agent_id" class="select select-bordered select-sm select-primary">
+                <option value="">Unassigned</option>
+                <option
+                  :for={agent <- @agents}
+                  value={agent.id}
+                  selected={agent.id == @conversation.assigned_agent_id}
+                >
+                  {agent.email}
+                </option>
+              </select>
+            </form>
+          </div>
         </div>
       </div>
 
@@ -58,11 +89,15 @@ defmodule AshDeskWeb.InboxLive.Show do
           <.icon name="hero-chat-bubble-left-right" class="size-12 opacity-30 mx-auto mb-3" />
           <p class="opacity-50">No messages yet. Send the first message!</p>
         </div>
-        <div :for={{id, message} <- @streams.messages} id={id} class={[
-          "chat",
-          message.sender.email == @current_user.email && "chat-end",
-          message.sender.email != @current_user.email && "chat-start"
-        ]}>
+        <div
+          :for={{id, message} <- @streams.messages}
+          id={id}
+          class={[
+            "chat",
+            message.sender.email == @current_user.email && "chat-end",
+            message.sender.email != @current_user.email && "chat-start"
+          ]}
+        >
           <div class="chat-header mb-1">
             <span class="text-xs font-bold">
               {if message.sender.email == @current_user.email, do: "Me", else: message.sender.email}
@@ -79,7 +114,12 @@ defmodule AshDeskWeb.InboxLive.Show do
         </div>
       </div>
 
-      <.form for={@message_form} id="send-message-form" phx-submit="send_message" class="sticky bottom-0 bg-base-100 pt-4 pb-2 border-t border-base-300">
+      <.form
+        for={@message_form}
+        id="send-message-form"
+        phx-submit="send_message"
+        class="sticky bottom-0 bg-base-100 pt-4 pb-2 border-t border-base-300"
+      >
         <div class="flex gap-2 items-end">
           <.input
             id={"message-body-#{Enum.count(@streams.messages)}"}
@@ -102,23 +142,61 @@ defmodule AshDeskWeb.InboxLive.Show do
     current_user = socket.assigns.current_user
     org = socket.assigns.org
 
-    case AshDesk.Support.get_conversation_by_id(conversation_id,
+    case AshDesk.Support.get_conversation_by_id(
+           conversation_id,
            actor: current_user,
            tenant: org.id
          ) do
       {:ok, conversation} ->
+        message_topic = "conversation:messages:#{conversation_id}"
+        meta_topic = "conversation:meta:#{conversation_id}"
+        presence_topic = "conversation:#{conversation_id}"
+
         socket =
           socket
           |> assign(:conversation, conversation)
           |> assign(:agents, [])
           |> assign(:is_admin, false)
-          |> assign(:message_form, to_form(%{"body" => ""}, id: "send-message-form"))
+          |> assign(:message_topic, message_topic)
+          |> assign(:meta_topic, meta_topic)
+          |> assign(:presence_topic, presence_topic)
+          |> assign(:online_users, %{})
+          |> assign(
+            :message_form,
+            to_form(%{"body" => ""}, id: "send-message-form")
+          )
           |> stream(:messages, [])
 
         socket =
           if connected?(socket) do
+            Phoenix.PubSub.subscribe(
+              AshDesk.PubSub,
+              message_topic
+            )
+
+            Phoenix.PubSub.subscribe(
+              AshDesk.PubSub,
+              meta_topic
+            )
+
+            AshDeskWeb.Presence.track(
+              self(),
+              presence_topic,
+              current_user.id,
+              %{
+                email: to_string(current_user.email),
+                joined_at: System.system_time(:second)
+              }
+            )
+
+            send(self(), :load_presence)
+
             start_async(socket, :fetch_messages, fn ->
-              fetch_conversation_data(conversation_id, current_user, org)
+              fetch_conversation_data(
+                conversation_id,
+                current_user,
+                org
+              )
             end)
           else
             socket
@@ -196,8 +274,53 @@ defmodule AshDeskWeb.InboxLive.Show do
      |> assign(:is_admin, is_admin)}
   end
 
+  @impl true
   def handle_async(:fetch_messages, {:exit, _reason}, socket) do
     {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(:load_presence, socket) do
+    {:noreply,
+     assign(
+       socket,
+       :online_users,
+       AshDeskWeb.Presence.list(socket.assigns.presence_topic)
+     )}
+  end
+
+  @impl true
+  def handle_info(%{event: "presence_diff"}, socket) do
+    {:noreply,
+     assign(
+       socket,
+       :online_users,
+       AshDeskWeb.Presence.list(socket.assigns.presence_topic)
+     )}
+  end
+
+  @impl true
+  def handle_info(
+        %Phoenix.Socket.Broadcast{
+          topic: "conversation:messages:" <> _,
+          event: "create",
+          payload: %Ash.Notifier.Notification{data: message}
+        },
+        socket
+      ) do
+    {:noreply, stream_insert(socket, :messages, message)}
+  end
+
+  @impl true
+  def handle_info(
+        %Phoenix.Socket.Broadcast{
+          topic: "conversation:meta:" <> _,
+          event: "update",
+          payload: %{conversation: conversation}
+        },
+        socket
+      ) do
+    {:noreply, assign(socket, :conversation, conversation)}
   end
 
   defp fetch_conversation_data(conversation_id, current_user, org) do

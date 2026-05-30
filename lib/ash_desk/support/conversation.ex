@@ -3,7 +3,8 @@ defmodule AshDesk.Support.Conversation do
     otp_app: :ash_desk,
     domain: AshDesk.Support,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    notifiers: [Ash.Notifier.PubSub]
 
   postgres do
     table "conversations"
@@ -40,6 +41,15 @@ defmodule AshDesk.Support.Conversation do
                      exists(organization.memberships, user_id == ^actor(:id) and role == :admin)
                    )
     end
+  end
+
+  pub_sub do
+    module AshDeskWeb.Endpoint
+    prefix "conversation:meta"
+    publish :update, [:id], load: [:assigned_agent]
+
+    prefix "org:conversations"
+    publish :create, [:organization_id]
   end
 
   multitenancy do

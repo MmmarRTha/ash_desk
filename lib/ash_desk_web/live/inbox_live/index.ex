@@ -39,7 +39,9 @@ defmodule AshDeskWeb.InboxLive.Index do
         <div id="conversations-empty" class="hidden only:block text-center py-16">
           <.icon name="hero-chat-bubble-left-right" class="size-16 opacity-30 mx-auto mb-4" />
           <h3 class="text-lg font-medium opacity-70">No conversations yet</h3>
-          <p class="text-sm opacity-50 mt-1">Conversations will appear here when customers reach out.</p>
+          <p class="text-sm opacity-50 mt-1">
+            Conversations will appear here when customers reach out.
+          </p>
         </div>
         <div
           :for={{id, conversation} <- @streams.conversations}
@@ -53,7 +55,9 @@ defmodule AshDeskWeb.InboxLive.Index do
                   <span class="text-sm">
                     {String.upcase(
                       String.first(
-                        to_string(conversation.assigned_agent && conversation.assigned_agent.email || "U")
+                        to_string(
+                          (conversation.assigned_agent && conversation.assigned_agent.email) || "U"
+                        )
                       )
                     )}
                   </span>
@@ -62,7 +66,8 @@ defmodule AshDeskWeb.InboxLive.Index do
               <div class="flex-1 min-w-0">
                 <div class="flex justify-between items-center">
                   <span class="font-medium truncate">
-                    {(conversation.assigned_agent && conversation.assigned_agent.email) || "Unassigned"}
+                    {(conversation.assigned_agent && conversation.assigned_agent.email) ||
+                      "Unassigned"}
                   </span>
                   <span class={[
                     "badge badge-sm shrink-0",

@@ -3,7 +3,8 @@ defmodule AshDesk.Support.Message do
     otp_app: :ash_desk,
     domain: AshDesk.Support,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    notifiers: [Ash.Notifier.PubSub]
 
   postgres do
     table "messages"
@@ -34,6 +35,13 @@ defmodule AshDesk.Support.Message do
     policy action_type(:create) do
       authorize_if expr(exists(conversation.organization.memberships, user_id == ^actor(:id)))
     end
+  end
+
+  pub_sub do
+    module AshDeskWeb.Endpoint
+    prefix "conversation:messages"
+
+    publish :create, [:conversation_id], load: [sender: [:email]]
   end
 
   attributes do

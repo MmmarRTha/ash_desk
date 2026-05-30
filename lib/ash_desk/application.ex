@@ -12,6 +12,7 @@ defmodule AshDesk.Application do
       AshDesk.Repo,
       {DNSCluster, query: Application.get_env(:ash_desk, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: AshDesk.PubSub},
+      AshDeskWeb.Presence,
       # Start a worker by calling: AshDesk.Worker.start_link(arg)
       # {AshDesk.Worker, arg},
       # Start to serve requests, typically the last entry
