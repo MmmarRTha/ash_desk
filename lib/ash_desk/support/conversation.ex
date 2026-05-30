@@ -1,17 +1,29 @@
-defmodule AshDesk.Organizations.Membership do
+defmodule AshDesk.Support.Conversation do
   use Ash.Resource,
     otp_app: :ash_desk,
-    domain: AshDesk.Organizations,
+    domain: AshDesk.Support,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer]
 
   postgres do
-    table "memberships"
+    table "conversations"
     repo AshDesk.Repo
   end
 
   actions do
-    defaults [:read, :destroy, create: [:role, :user_id, :organization_id], update: [:role]]
+    defaults [
+      :read,
+      :destroy,
+      create: [:organization_id, :assigned_agent_id, :status],
+      update: [:assigned_agent_id, :status]
+    ]
+
+    read :list_assigned_to do
+      description "List conversations assigned to a specific agent"
+      argument :agent_id, :uuid, allow_nil?: false
+      filter expr(assigned_agent_id == ^arg(:agent_id))
+      prepare build(load: [:assigned_agent])
+    end
   end
 
   policies do
@@ -19,10 +31,8 @@ defmodule AshDesk.Organizations.Membership do
       authorize_if expr(exists(organization.memberships, user_id == ^actor(:id)))
     end
 
-    # MVP: any authenticated user can be added to an org.
-    # Tighten to admin-only for production.
     policy action_type(:create) do
-      authorize_if actor_present()
+      authorize_if expr(exists(organization.memberships, user_id == ^actor(:id)))
     end
 
     policy action_type([:update, :destroy]) do
@@ -40,9 +50,10 @@ defmodule AshDesk.Organizations.Membership do
   attributes do
     uuid_primary_key :id
 
-    attribute :role, :atom do
-      constraints one_of: [:admin, :agent]
-      default :agent
+    attribute :status, :atom do
+      constraints one_of: [:open, :pending, :resolved]
+      default :open
+      allow_nil? false
       public? true
     end
 
@@ -52,15 +63,18 @@ defmodule AshDesk.Organizations.Membership do
 
   relationships do
     belongs_to :organization, AshDesk.Organizations.Organization do
+      allow_nil? false
       public? true
     end
 
-    belongs_to :user, AshDesk.Accounts.User do
+    belongs_to :assigned_agent, AshDesk.Accounts.User do
+      source_attribute :assigned_agent_id
+      allow_nil? true
       public? true
     end
-  end
 
-  identities do
-    identity :unique_membership, [:user_id, :organization_id]
+    has_many :messages, AshDesk.Support.Message do
+      public? true
+    end
   end
 end

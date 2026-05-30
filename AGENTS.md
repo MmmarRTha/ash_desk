@@ -1,3 +1,18 @@
+# AshDesk
+Phoenix + Ash project. MVP Multi-tenant realtime support inbox.
+
+## Architecture
+- 3 domains: `Accounts` (auth), `Organizations` (multi-tenancy), `Support` (product)
+- Multi-tenancy via `attribute` strategy on `organization_id`
+- Auth: AshAuthentication with password + confirmation strategies
+- Authorization: Ash Policy Authorizer
+
+## Resources
+- `lib/ash_desk/<domain>/` — resource definitions
+- `lib/ash_desk/<domain>.ex` — domain modules with code interfaces
+- `config/test.exs`: note duplicate `username`/`password` keys
+- Repos, extensions: `AshDesk.Repo` uses `AshPostgres.Repo` with `ash-functions` + `citext`
+
 This is a web application written using the Phoenix web framework.
 
 ## Project guidelines

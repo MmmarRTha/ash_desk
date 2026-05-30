@@ -35,34 +35,41 @@ defmodule AshDeskWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <header class="navbar px-4 sm:px-6 lg:px-8">
+    <header class="navbar bg-base-200 shadow-sm px-4 sm:px-6 lg:px-8">
       <div class="flex-1">
-        <a href="/" class="flex-1 flex w-fit items-center gap-2">
-          <img src={~p"/images/logo.svg"} width="36" />
-          <span class="text-sm font-semibold">v{Application.spec(:phoenix, :vsn)}</span>
-        </a>
+        <.link navigate={~p"/inbox"} class="flex items-center gap-2">
+          <.icon name="hero-chat-bubble-left-ellipsis" class="size-6 text-primary" />
+          <span class="text-lg font-bold">AshDesk</span>
+        </.link>
       </div>
-      <div class="flex-none">
-        <ul class="flex flex-column px-1 space-x-4 items-center">
-          <li>
-            <a href="https://phoenixframework.org/" class="btn btn-ghost">Website</a>
-          </li>
-          <li>
-            <a href="https://github.com/phoenixframework/phoenix" class="btn btn-ghost">GitHub</a>
-          </li>
-          <li>
-            <.theme_toggle />
-          </li>
-          <li>
-            <a href="https://hexdocs.pm/phoenix/overview.html" class="btn btn-primary">
-              Get Started <span aria-hidden="true">&rarr;</span>
-            </a>
-          </li>
-        </ul>
+      <div class="flex-none gap-2">
+        <.link navigate={~p"/inbox"} class="btn btn-ghost btn-sm">
+          <.icon name="hero-inbox" class="size-5" />
+          <span class="hidden sm:inline">Inbox</span>
+        </.link>
+        <.theme_toggle />
+        <div :if={@current_scope} class="dropdown dropdown-end">
+          <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar placeholder">
+            <div class="bg-primary text-primary-content rounded-full w-10">
+              <span class="text-sm">{String.upcase(String.first(to_string(@current_scope.email)))}</span>
+            </div>
+          </div>
+          <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-200 rounded-box z-10 mt-3 w-52 p-2 shadow-lg border border-base-300">
+            <li class="menu-title">
+              <span class="opacity-70">{@current_scope.email}</span>
+            </li>
+            <li>
+              <.link href="/sign-out" method="delete" class="text-error">
+                <.icon name="hero-arrow-right-on-rectangle" class="size-4" />
+                Sign out
+              </.link>
+            </li>
+          </ul>
+        </div>
       </div>
     </header>
 
-    <main class="px-4 py-20 sm:px-6 lg:px-8">
+    <main class="px-4 py-8 sm:px-6 lg:px-8">
       <div class="mx-auto max-w-2xl space-y-4">
         {render_slot(@inner_block)}
       </div>

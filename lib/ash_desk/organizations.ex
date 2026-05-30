@@ -1,6 +1,9 @@
 defmodule AshDesk.Organizations do
-  use Ash.Domain,
-    otp_app: :ash_desk
+  use Ash.Domain, otp_app: :ash_desk, extensions: [AshAdmin.Domain]
+
+  admin do
+    show? true
+  end
 
   resources do
     resource AshDesk.Organizations.Organization do
