@@ -225,7 +225,7 @@ defmodule AshDeskWeb.InboxLive.Show do
 
         {:noreply,
          socket
-         |> stream_insert(:messages, message)
+         |> stream_insert(:messages, message, at: 0)
          |> assign(:message_form, to_form(%{"body" => ""}, id: "send-message-form"))}
 
       {:error, reason} ->
@@ -308,7 +308,7 @@ defmodule AshDeskWeb.InboxLive.Show do
         },
         socket
       ) do
-    {:noreply, stream_insert(socket, :messages, message)}
+    {:noreply, stream_insert(socket, :messages, message, at: 0)}
   end
 
   @impl true

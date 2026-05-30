@@ -98,14 +98,45 @@ defmodule AshDeskWeb.InboxLive.Index do
 
   @impl true
   def handle_async(:fetch_inbox, {:ok, %{org: org, conversations: conversations}}, socket) do
-    {:noreply,
-     socket
-     |> assign(:org, org)
-     |> stream(:conversations, conversations, reset: true)}
+    socket =
+      socket
+      |> assign(:org, org)
+      |> stream(:conversations, conversations, reset: true)
+
+    socket =
+      if connected?(socket) and org do
+        topic = "org:conversations:#{org.id}"
+        Phoenix.PubSub.subscribe(AshDesk.PubSub, topic)
+        assign(socket, :conversation_topic, topic)
+      else
+        assign(socket, :conversation_topic, nil)
+      end
+
+    {:noreply, socket}
   end
 
-  def handle_async(:fetch_inbox, {:exit, _reason}, socket) do
+  def handle_async(:fetch_inbox, {:exit, reason}, socket) do
+    require Logger
+    Logger.error("fetch_inbox failed: #{inspect(reason)}")
     {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(
+        %Phoenix.Socket.Broadcast{
+          topic: "org:conversations:" <> _,
+          event: "create",
+          payload: %Ash.Notifier.Notification{data: conversation}
+        },
+        socket
+      ) do
+    conversation =
+      case Ash.load(conversation, [:assigned_agent], actor: socket.assigns.current_user) do
+        {:ok, loaded} -> loaded
+        _ -> conversation
+      end
+
+    {:noreply, stream_insert(socket, :conversations, conversation, at: 0)}
   end
 
   defp fetch_inbox_data(current_user) do

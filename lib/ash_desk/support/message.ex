@@ -23,7 +23,7 @@ defmodule AshDesk.Support.Message do
       description "List messages for a specific conversation"
       argument :conversation_id, :uuid, allow_nil?: false
       filter expr(conversation_id == ^arg(:conversation_id))
-      prepare build(load: [:sender])
+      prepare build(load: [:sender], sort: [created_at: :desc])
     end
   end
 
