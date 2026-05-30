@@ -16,7 +16,7 @@ defmodule AshDesk.Organizations.Membership do
 
   policies do
     policy action_type(:read) do
-      authorize_if expr(user_id == ^actor(:id))
+      authorize_if expr(exists(organization.memberships, user_id == ^actor(:id)))
     end
 
     # MVP: any authenticated user can be added to an org.
@@ -27,10 +27,7 @@ defmodule AshDesk.Organizations.Membership do
 
     policy action_type([:update, :destroy]) do
       authorize_if expr(
-                     exists(
-                       organization.memberships,
-                       user_id == ^actor(:id) and role == :admin
-                     )
+                     exists(organization.memberships, user_id == ^actor(:id) and role == :admin)
                    )
     end
   end
