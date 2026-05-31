@@ -15,7 +15,7 @@ defmodule AshDesk.Support.Conversation do
     defaults [
       :read,
       :destroy,
-      create: [:organization_id, :assigned_agent_id, :status],
+      create: [:organization_id, :assigned_agent_id, :status, :subject],
       update: [:assigned_agent_id, :status]
     ]
 
@@ -24,6 +24,13 @@ defmodule AshDesk.Support.Conversation do
       argument :agent_id, :uuid, allow_nil?: false
       filter expr(assigned_agent_id == ^arg(:agent_id))
       prepare build(load: [:assigned_agent])
+    end
+
+    read :list_for_customer do
+      description "List conversations for an specific customer"
+      argument :customer_id, :uuid, allow_nil?: false
+      filter expr(customer_id == ^arg(:customer_id))
+      prepare build(sort: [created_at: :desc])
     end
   end
 
@@ -60,6 +67,11 @@ defmodule AshDesk.Support.Conversation do
   attributes do
     uuid_primary_key :id
 
+    attribute :subject, :string do
+      allow_nil? true
+      public? true
+    end
+
     attribute :status, :atom do
       constraints one_of: [:open, :pending, :resolved]
       default :open
@@ -74,6 +86,12 @@ defmodule AshDesk.Support.Conversation do
   relationships do
     belongs_to :organization, AshDesk.Organizations.Organization do
       allow_nil? false
+      public? true
+    end
+
+    belongs_to :customer, AshDesk.Accounts.User do
+      source_attribute :customer_id
+      allow_nil? true
       public? true
     end
 
