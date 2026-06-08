@@ -191,7 +191,8 @@ defmodule AshDeskWeb.InboxLive.Index do
       diff < 3600 -> "#{div(diff, 60)} min ago"
       diff < 86400 -> "#{div(diff, 3600)} hour ago"
       diff < 604_800 -> "#{div(diff, 86400)} day ago"
-      true -> Calendar.strftime(datetime, "%b %d")
+      diff < 2_592_000 -> "#{div(diff, 86400)} days ago"
+      true -> Calendar.strftime(datetime, "%b %d, %Y")
     end
   end
 
