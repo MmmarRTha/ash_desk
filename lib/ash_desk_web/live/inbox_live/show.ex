@@ -8,18 +8,16 @@ defmodule AshDeskWeb.InboxLive.Show do
   def mount(_params, _session, socket) do
     current_user = socket.assigns.current_user
 
-    socket =
-      case AshDesk.Organizations.list_organizations(actor: current_user) do
-        {:ok, [org | _]} ->
-          assign(socket, :org, org)
+    case AshDesk.Organizations.list_organizations(actor: current_user) do
+      {:ok, [org | _]} ->
+        {:ok, assign(socket, :org, org)}
 
-        _ ->
-          socket
-          |> put_flash(:error, "No organization found")
-          |> push_navigate(to: ~p"/inbox")
-      end
-
-    {:ok, socket}
+      _ ->
+        {:ok,
+         socket
+         |> assign(:org, nil)
+         |> assign(:organization_missing, true)}
+    end
   end
 
   @impl true
@@ -135,6 +133,14 @@ defmodule AshDeskWeb.InboxLive.Show do
       </.form>
     </Layouts.app>
     """
+  end
+
+  @impl true
+  def handle_params(_params, _uri, %{assigns: %{organization_missing: true}} = socket) do
+    {:noreply,
+     socket
+     |> put_flash(:error, "No organization found")
+     |> push_navigate(to: ~p"/inbox")}
   end
 
   @impl true
