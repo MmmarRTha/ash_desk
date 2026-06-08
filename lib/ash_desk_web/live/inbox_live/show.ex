@@ -122,7 +122,7 @@ defmodule AshDeskWeb.InboxLive.Show do
       >
         <div class="flex gap-2 items-end">
           <.input
-            id={"message-body-#{Enum.count(@streams.messages)}"}
+            id={"message-body-#{@message_input_id}"}
             field={@message_form[:body]}
             type="textarea"
             placeholder="Type your message..."
@@ -153,6 +153,15 @@ defmodule AshDeskWeb.InboxLive.Show do
         presence_topic = "conversation:#{conversation_id}"
 
         socket =
+          if connected?(socket) do
+            socket
+            |> cancel_async(:fetch_messages)
+            |> leave_conversation(current_user.id)
+          else
+            socket
+          end
+
+        socket =
           socket
           |> assign(:conversation, conversation)
           |> assign(:agents, [])
@@ -161,48 +170,24 @@ defmodule AshDeskWeb.InboxLive.Show do
           |> assign(:meta_topic, meta_topic)
           |> assign(:presence_topic, presence_topic)
           |> assign(:online_users, %{})
+          |> assign(:message_input_id, 0)
           |> assign(
             :message_form,
             to_form(%{"body" => ""}, id: "send-message-form")
           )
-          |> stream(:messages, [])
+          |> stream(:messages, [], reset: true)
 
         socket =
           if connected?(socket) do
-            Phoenix.PubSub.subscribe(
-              AshDesk.PubSub,
-              message_topic
-            )
-
-            Phoenix.PubSub.subscribe(
-              AshDesk.PubSub,
-              meta_topic
-            )
-
-            Phoenix.PubSub.subscribe(
-              AshDesk.PubSub,
-              presence_topic
-            )
-
-            AshDeskWeb.Presence.track(
-              self(),
+            join_conversation(
+              socket,
+              current_user,
+              message_topic,
+              meta_topic,
               presence_topic,
-              current_user.id,
-              %{
-                email: to_string(current_user.email),
-                joined_at: System.system_time(:second)
-              }
+              conversation_id,
+              org
             )
-
-            send(self(), :load_presence)
-
-            start_async(socket, :fetch_messages, fn ->
-              fetch_conversation_data(
-                conversation_id,
-                current_user,
-                org
-              )
-            end)
           else
             socket
           end
@@ -215,6 +200,13 @@ defmodule AshDeskWeb.InboxLive.Show do
          |> put_flash(:error, "Conversation not found")
          |> push_navigate(to: ~p"/inbox")}
     end
+  end
+
+  @impl true
+  def terminate(_reason, socket) do
+    user_id = socket.assigns[:current_user] && socket.assigns.current_user.id
+    leave_conversation(socket, user_id)
+    :ok
   end
 
   @impl true
@@ -231,7 +223,8 @@ defmodule AshDeskWeb.InboxLive.Show do
         {:noreply,
          socket
          |> stream_insert(:messages, message, at: 0)
-         |> assign(:message_form, to_form(%{"body" => ""}, id: "send-message-form"))}
+         |> assign(:message_form, to_form(%{"body" => ""}, id: "send-message-form"))
+         |> update(:message_input_id, &(&1 + 1))}
 
       {:error, reason} ->
         {:noreply,
@@ -321,11 +314,67 @@ defmodule AshDeskWeb.InboxLive.Show do
         %Phoenix.Socket.Broadcast{
           topic: "conversation:meta:" <> _,
           event: "update",
-          payload: %{conversation: conversation}
+          payload: %Ash.Notifier.Notification{data: conversation}
         },
         socket
       ) do
     {:noreply, assign(socket, :conversation, conversation)}
+  end
+
+  defp leave_conversation(socket, user_id) do
+    if connected?(socket) do
+      for topic <- conversation_topics(socket), is_binary(topic) do
+        Phoenix.PubSub.unsubscribe(AshDesk.PubSub, topic)
+      end
+
+      case socket.assigns[:presence_topic] do
+        topic when is_binary(topic) and not is_nil(user_id) ->
+          AshDeskWeb.Presence.untrack(self(), topic, user_id)
+
+        _ ->
+          :ok
+      end
+    end
+
+    socket
+  end
+
+  defp join_conversation(
+         socket,
+         current_user,
+         message_topic,
+         meta_topic,
+         presence_topic,
+         conversation_id,
+         org
+       ) do
+    Phoenix.PubSub.subscribe(AshDesk.PubSub, message_topic)
+    Phoenix.PubSub.subscribe(AshDesk.PubSub, meta_topic)
+    Phoenix.PubSub.subscribe(AshDesk.PubSub, presence_topic)
+
+    AshDeskWeb.Presence.track(
+      self(),
+      presence_topic,
+      current_user.id,
+      %{
+        email: to_string(current_user.email),
+        joined_at: System.system_time(:second)
+      }
+    )
+
+    send(self(), :load_presence)
+
+    start_async(socket, :fetch_messages, fn ->
+      fetch_conversation_data(conversation_id, current_user, org)
+    end)
+  end
+
+  defp conversation_topics(socket) do
+    [
+      socket.assigns[:message_topic],
+      socket.assigns[:meta_topic],
+      socket.assigns[:presence_topic]
+    ]
   end
 
   defp fetch_conversation_data(conversation_id, current_user, org) do
