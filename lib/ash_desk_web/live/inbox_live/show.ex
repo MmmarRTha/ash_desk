@@ -139,66 +139,71 @@ defmodule AshDeskWeb.InboxLive.Show do
 
   @impl true
   def handle_params(%{"id" => conversation_id}, _uri, socket) do
-    current_user = socket.assigns.current_user
-    org = socket.assigns.org
-
-    case AshDesk.Support.get_conversation_by_id(
-           conversation_id,
-           actor: current_user,
-           tenant: org.id
-         ) do
-      {:ok, conversation} ->
-        message_topic = "conversation:messages:#{conversation_id}"
-        meta_topic = "conversation:meta:#{conversation_id}"
-        presence_topic = "conversation:#{conversation_id}"
-
-        socket =
-          if connected?(socket) do
-            socket
-            |> cancel_async(:fetch_messages)
-            |> leave_conversation(current_user.id)
-          else
-            socket
-          end
-
-        socket =
-          socket
-          |> assign(:conversation, conversation)
-          |> assign(:agents, [])
-          |> assign(:is_admin, false)
-          |> assign(:message_topic, message_topic)
-          |> assign(:meta_topic, meta_topic)
-          |> assign(:presence_topic, presence_topic)
-          |> assign(:online_users, %{})
-          |> assign(:message_input_id, 0)
-          |> assign(
-            :message_form,
-            to_form(%{"body" => ""}, id: "send-message-form")
-          )
-          |> stream(:messages, [], reset: true)
-
-        socket =
-          if connected?(socket) do
-            join_conversation(
-              socket,
-              current_user,
-              message_topic,
-              meta_topic,
-              presence_topic,
-              conversation_id,
-              org
-            )
-          else
-            socket
-          end
-
+    case socket.assigns[:org] do
+      nil ->
         {:noreply, socket}
 
-      {:error, _reason} ->
-        {:noreply,
-         socket
-         |> put_flash(:error, "Conversation not found")
-         |> push_navigate(to: ~p"/inbox")}
+      org ->
+        current_user = socket.assigns.current_user
+
+        case AshDesk.Support.get_conversation_by_id(
+               conversation_id,
+               actor: current_user,
+               tenant: org.id
+             ) do
+          {:ok, conversation} ->
+            message_topic = "conversation:messages:#{conversation_id}"
+            meta_topic = "conversation:meta:#{conversation_id}"
+            presence_topic = "conversation:#{conversation_id}"
+
+            socket =
+              if connected?(socket) do
+                socket
+                |> cancel_async(:fetch_messages)
+                |> leave_conversation(current_user.id)
+              else
+                socket
+              end
+
+            socket =
+              socket
+              |> assign(:conversation, conversation)
+              |> assign(:agents, [])
+              |> assign(:is_admin, false)
+              |> assign(:message_topic, message_topic)
+              |> assign(:meta_topic, meta_topic)
+              |> assign(:presence_topic, presence_topic)
+              |> assign(:online_users, %{})
+              |> assign(:message_input_id, 0)
+              |> assign(
+                :message_form,
+                to_form(%{"body" => ""}, id: "send-message-form")
+              )
+              |> stream(:messages, [], reset: true)
+
+            socket =
+              if connected?(socket) do
+                join_conversation(
+                  socket,
+                  current_user,
+                  message_topic,
+                  meta_topic,
+                  presence_topic,
+                  conversation_id,
+                  org
+                )
+              else
+                socket
+              end
+
+            {:noreply, socket}
+
+          {:error, _reason} ->
+            {:noreply,
+             socket
+             |> put_flash(:error, "Conversation not found")
+             |> push_navigate(to: ~p"/inbox")}
+        end
     end
   end
 
@@ -262,7 +267,7 @@ defmodule AshDeskWeb.InboxLive.Show do
   @impl true
   def handle_async(
         :fetch_messages,
-        {:ok, %{messages: messages, agents: agents, is_admin: is_admin}},
+        {:ok, {:ok, %{messages: messages, agents: agents, is_admin: is_admin}}},
         socket
       ) do
     {:noreply,
@@ -273,8 +278,19 @@ defmodule AshDeskWeb.InboxLive.Show do
   end
 
   @impl true
-  def handle_async(:fetch_messages, {:exit, _reason}, socket) do
-    {:noreply, socket}
+  def handle_async(:fetch_messages, {:ok, {:error, reason}}, socket) do
+    require Logger
+    Logger.error("fetch_messages failed: #{inspect(reason)}")
+
+    {:noreply, put_flash(socket, :error, "Failed to load conversation. Please try again.")}
+  end
+
+  @impl true
+  def handle_async(:fetch_messages, {:exit, reason}, socket) do
+    require Logger
+    Logger.error("fetch_messages crashed: #{inspect(reason)}")
+
+    {:noreply, put_flash(socket, :error, "Failed to load conversation. Please try again.")}
   end
 
   @impl true
@@ -378,24 +394,24 @@ defmodule AshDeskWeb.InboxLive.Show do
   end
 
   defp fetch_conversation_data(conversation_id, current_user, org) do
-    {:ok, messages} =
-      AshDesk.Support.list_messages_for_conversation(
-        %{conversation_id: conversation_id},
-        actor: current_user
-      )
-
-    {:ok, memberships} =
-      AshDesk.Organizations.list_memberships(
-        actor: current_user,
-        tenant: org.id,
-        load: [:user]
-      )
-
-    %{
-      messages: messages,
-      agents: Enum.map(memberships, & &1.user),
-      is_admin: Enum.any?(memberships, &(&1.user_id == current_user.id and &1.role == :admin))
-    }
+    with {:ok, messages} <-
+           AshDesk.Support.list_messages_for_conversation(
+             %{conversation_id: conversation_id},
+             actor: current_user
+           ),
+         {:ok, memberships} <-
+           AshDesk.Organizations.list_memberships(
+             actor: current_user,
+             tenant: org.id,
+             load: [:user]
+           ) do
+      {:ok,
+       %{
+         messages: messages,
+         agents: Enum.map(memberships, & &1.user),
+         is_admin: Enum.any?(memberships, &(&1.user_id == current_user.id and &1.role == :admin))
+       }}
+    end
   end
 
   defp relative_time(%DateTime{} = datetime) do
