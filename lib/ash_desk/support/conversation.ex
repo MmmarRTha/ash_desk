@@ -36,7 +36,11 @@ defmodule AshDesk.Support.Conversation do
 
   policies do
     policy action_type(:read) do
-      authorize_if expr(exists(organization.memberships, user_id == ^actor(:id)))
+      authorize_if expr(
+                     exists(organization.memberships, user_id == ^actor(:id) and role == :admin)
+                   )
+
+      authorize_if expr(assigned_agent_id == ^actor(:id))
     end
 
     policy action_type(:create) do
