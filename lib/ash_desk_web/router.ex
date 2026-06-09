@@ -28,10 +28,6 @@ defmodule AshDeskWeb.Router do
       live "/inbox", InboxLive.Index, :index
       live "/inbox/:id", InboxLive.Show, :show
     end
-  end
-
-  scope "/", AshDeskWeb do
-    pipe_through :browser
 
     get "/", PageController, :home
     auth_routes AuthController, AshDesk.Accounts.User, path: "/auth"
