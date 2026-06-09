@@ -19,6 +19,12 @@ defmodule AshDesk.Support.Conversation do
       update: [:assigned_agent_id, :status]
     ]
 
+    create :create_by_customer do
+      accept [:subject, :organization_id]
+      change set_attribute(:customer_id, actor(:id))
+      change set_attribute(:status, :open)
+    end
+
     read :list_assigned_to do
       description "List conversations assigned to a specific agent"
       argument :agent_id, :uuid, allow_nil?: false
@@ -41,6 +47,7 @@ defmodule AshDesk.Support.Conversation do
                    )
 
       authorize_if expr(assigned_agent_id == ^actor(:id))
+      authorize_if expr(customer_id == ^actor(:id))
     end
 
     policy action_type(:create) do

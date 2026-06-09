@@ -13,6 +13,7 @@ defmodule AshDesk.Support do
       define :list_conversations_for_agent, action: :list_assigned_to
       define :update_conversation, action: :update
       define :list_conversations_for_customer, action: :list_for_customer, args: [:customer_id]
+      define :create_conversation_by_customer, action: :create_by_customer, args: [:subject]
     end
 
     resource AshDesk.Support.Message do

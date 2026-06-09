@@ -37,6 +37,7 @@ defmodule AshDesk.Support.Message do
                    )
 
       authorize_if expr(conversation.assigned_agent_id == ^actor(:id))
+      authorize_if expr(conversation.customer_id == ^actor(:id))
     end
 
     policy action_type(:create) do
@@ -48,6 +49,7 @@ defmodule AshDesk.Support.Message do
                    )
 
       authorize_if expr(conversation.assigned_agent_id == ^actor(:id))
+      authorize_if expr(conversation.customer_id == ^actor(:id))
     end
   end
 
