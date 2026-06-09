@@ -125,6 +125,24 @@ defmodule AshDeskWeb.InboxLive.Index do
   def handle_info(
         %Phoenix.Socket.Broadcast{
           topic: "org:conversations:" <> _,
+          event: "update",
+          payload: %Ash.Notifier.Notification{data: conversation}
+        },
+        socket
+      ) do
+    conversation =
+      case Ash.load(conversation, [:assigned_agent], actor: socket.assigns.current_user) do
+        {:ok, loaded} -> loaded
+        _ -> conversation
+      end
+
+    {:noreply, stream_insert(socket, :conversations, conversation)}
+  end
+
+  @impl true
+  def handle_info(
+        %Phoenix.Socket.Broadcast{
+          topic: "org:conversations:" <> _,
           event: "create",
           payload: %Ash.Notifier.Notification{data: conversation}
         },

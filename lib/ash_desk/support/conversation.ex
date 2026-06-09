@@ -68,6 +68,7 @@ defmodule AshDesk.Support.Conversation do
 
     prefix "org:conversations"
     publish :create, [:organization_id]
+    publish :update, [:organization_id]
   end
 
   multitenancy do
