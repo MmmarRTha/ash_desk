@@ -51,17 +51,21 @@ defmodule AshDeskWeb.Layouts do
         <div :if={@current_scope} class="dropdown dropdown-end">
           <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar placeholder">
             <div class="bg-primary text-primary-content rounded-full w-10">
-              <span class="text-sm">{String.upcase(String.first(to_string(@current_scope.email)))}</span>
+              <span class="text-sm">
+                {String.upcase(String.first(to_string(@current_scope.email)))}
+              </span>
             </div>
           </div>
-          <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-200 rounded-box z-10 mt-3 w-52 p-2 shadow-lg border border-base-300">
+          <ul
+            tabindex="0"
+            class="menu menu-sm dropdown-content bg-base-200 rounded-box z-10 mt-3 w-52 p-2 shadow-lg border border-base-300"
+          >
             <li class="menu-title">
               <span class="opacity-70">{@current_scope.email}</span>
             </li>
             <li>
               <.link href="/sign-out" method="delete" class="text-error">
-                <.icon name="hero-arrow-right-on-rectangle" class="size-4" />
-                Sign out
+                <.icon name="hero-arrow-right-on-rectangle" class="size-4" /> Sign out
               </.link>
             </li>
           </ul>

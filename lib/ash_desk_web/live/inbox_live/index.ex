@@ -39,7 +39,9 @@ defmodule AshDeskWeb.InboxLive.Index do
         <div id="conversations-empty" class="hidden only:block text-center py-16">
           <.icon name="hero-chat-bubble-left-right" class="size-16 opacity-30 mx-auto mb-4" />
           <h3 class="text-lg font-medium opacity-70">No conversations yet</h3>
-          <p class="text-sm opacity-50 mt-1">Conversations will appear here when customers reach out.</p>
+          <p class="text-sm opacity-50 mt-1">
+            Conversations will appear here when customers reach out.
+          </p>
         </div>
         <div
           :for={{id, conversation} <- @streams.conversations}
@@ -53,7 +55,9 @@ defmodule AshDeskWeb.InboxLive.Index do
                   <span class="text-sm">
                     {String.upcase(
                       String.first(
-                        to_string(conversation.assigned_agent && conversation.assigned_agent.email || "U")
+                        to_string(
+                          (conversation.assigned_agent && conversation.assigned_agent.email) || "U"
+                        )
                       )
                     )}
                   </span>
@@ -62,7 +66,8 @@ defmodule AshDeskWeb.InboxLive.Index do
               <div class="flex-1 min-w-0">
                 <div class="flex justify-between items-center">
                   <span class="font-medium truncate">
-                    {(conversation.assigned_agent && conversation.assigned_agent.email) || "Unassigned"}
+                    {(conversation.assigned_agent && conversation.assigned_agent.email) ||
+                      "Unassigned"}
                   </span>
                   <span class={[
                     "badge badge-sm shrink-0",
@@ -93,14 +98,63 @@ defmodule AshDeskWeb.InboxLive.Index do
 
   @impl true
   def handle_async(:fetch_inbox, {:ok, %{org: org, conversations: conversations}}, socket) do
-    {:noreply,
-     socket
-     |> assign(:org, org)
-     |> stream(:conversations, conversations, reset: true)}
+    socket =
+      socket
+      |> assign(:org, org)
+      |> stream(:conversations, conversations, reset: true)
+
+    socket =
+      if connected?(socket) and org do
+        topic = "org:conversations:#{org.id}"
+        Phoenix.PubSub.subscribe(AshDesk.PubSub, topic)
+        assign(socket, :conversation_topic, topic)
+      else
+        assign(socket, :conversation_topic, nil)
+      end
+
+    {:noreply, socket}
   end
 
-  def handle_async(:fetch_inbox, {:exit, _reason}, socket) do
+  def handle_async(:fetch_inbox, {:exit, reason}, socket) do
+    require Logger
+    Logger.error("fetch_inbox failed: #{inspect(reason)}")
     {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(
+        %Phoenix.Socket.Broadcast{
+          topic: "org:conversations:" <> _,
+          event: "update",
+          payload: %Ash.Notifier.Notification{data: conversation}
+        },
+        socket
+      ) do
+    conversation =
+      case Ash.load(conversation, [:assigned_agent], actor: socket.assigns.current_user) do
+        {:ok, loaded} -> loaded
+        _ -> conversation
+      end
+
+    {:noreply, stream_insert(socket, :conversations, conversation)}
+  end
+
+  @impl true
+  def handle_info(
+        %Phoenix.Socket.Broadcast{
+          topic: "org:conversations:" <> _,
+          event: "create",
+          payload: %Ash.Notifier.Notification{data: conversation}
+        },
+        socket
+      ) do
+    conversation =
+      case Ash.load(conversation, [:assigned_agent], actor: socket.assigns.current_user) do
+        {:ok, loaded} -> loaded
+        _ -> conversation
+      end
+
+    {:noreply, stream_insert(socket, :conversations, conversation, at: 0)}
   end
 
   defp fetch_inbox_data(current_user) do
@@ -155,7 +209,8 @@ defmodule AshDeskWeb.InboxLive.Index do
       diff < 3600 -> "#{div(diff, 60)} min ago"
       diff < 86400 -> "#{div(diff, 3600)} hour ago"
       diff < 604_800 -> "#{div(diff, 86400)} day ago"
-      true -> Calendar.strftime(datetime, "%b %d")
+      diff < 2_592_000 -> "#{div(diff, 86400)} days ago"
+      true -> Calendar.strftime(datetime, "%b %d, %Y")
     end
   end
 
