@@ -3,7 +3,8 @@ defmodule AshDesk.Support.Message do
     otp_app: :ash_desk,
     domain: AshDesk.Support,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    notifiers: [Ash.Notifier.PubSub]
 
   postgres do
     table "messages"
@@ -22,18 +23,41 @@ defmodule AshDesk.Support.Message do
       description "List messages for a specific conversation"
       argument :conversation_id, :uuid, allow_nil?: false
       filter expr(conversation_id == ^arg(:conversation_id))
-      prepare build(load: [:sender])
+      prepare build(load: [:sender], sort: [created_at: :desc])
     end
   end
 
   policies do
     policy action_type(:read) do
-      authorize_if expr(exists(conversation.organization.memberships, user_id == ^actor(:id)))
+      authorize_if expr(
+                     exists(
+                       conversation.organization.memberships,
+                       user_id == ^actor(:id) and role == :admin
+                     )
+                   )
+
+      authorize_if expr(conversation.assigned_agent_id == ^actor(:id))
+      authorize_if expr(conversation.customer_id == ^actor(:id))
     end
 
     policy action_type(:create) do
-      authorize_if expr(exists(conversation.organization.memberships, user_id == ^actor(:id)))
+      authorize_if expr(
+                     exists(
+                       conversation.organization.memberships,
+                       user_id == ^actor(:id) and role == :admin
+                     )
+                   )
+
+      authorize_if expr(conversation.assigned_agent_id == ^actor(:id))
+      authorize_if expr(conversation.customer_id == ^actor(:id))
     end
+  end
+
+  pub_sub do
+    module AshDeskWeb.Endpoint
+    prefix "conversation:messages"
+
+    publish :create, [:conversation_id], load: [sender: [:email]]
   end
 
   attributes do

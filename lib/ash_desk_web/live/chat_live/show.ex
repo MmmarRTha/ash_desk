@@ -1,4 +1,4 @@
-defmodule AshDeskWeb.InboxLive.Show do
+defmodule AshDeskWeb.ChatLive.Show do
   use AshDeskWeb, :live_view
 
   on_mount {AshDeskWeb.LiveUserAuth, :live_user_required}
@@ -16,7 +16,7 @@ defmodule AshDeskWeb.InboxLive.Show do
         {:ok,
          socket
          |> assign(:org, nil)
-         |> assign(:organization_missing, true)}
+         |> assign(:org_missing, true)}
     end
   end
 
@@ -25,112 +25,104 @@ defmodule AshDeskWeb.InboxLive.Show do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_user}>
       <.link
-        navigate={~p"/inbox"}
+        navigate={~p"/chat"}
         class="text-sm opacity-70 hover:opacity-100 inline-flex items-center gap-1 mb-4"
       >
-        <.icon name="hero-arrow-left" class="size-4" /> Back to Inbox
+        <.icon name="hero-arrow-left" class="size-4" /> Back to conversations
       </.link>
 
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h1 class="text-2xl font-bold">{@org.name}</h1>
-          <p class="text-sm opacity-50">Conversation</p>
-        </div>
-
-        <div class="flex items-center gap-4">
-          <%!-- Online presence indicator --%>
-          <div :if={@online_users != %{}} class="flex items-center gap-2">
-            <div class="flex -space-x-2">
-              <div
-                :for={{_user_id, user} <- Enum.take(@online_users, 3)}
-                class="relative"
-              >
-                <div class="avatar placeholder">
-                  <div class="bg-success text-success-content rounded-full w-8 ring-2 ring-base-100">
-                    <span class="text-xs">
-                      {String.upcase(String.first(List.first(user.metas).email) || "U")}
-                    </span>
-                  </div>
-                </div>
-                <span class="absolute bottom-0 right-0 size-2.5 bg-success rounded-full ring-2 ring-base-100">
-                </span>
-              </div>
+      <div class="max-w-2xl mx-auto">
+        <div class="mb-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-2xl font-bold">{@conversation.subject || "Conversation"}</h1>
+              <span class={[
+                "badge mt-1",
+                @conversation.status == :open && "badge-success",
+                @conversation.status == :pending && "badge-warning",
+                @conversation.status == :resolved && "badge-ghost"
+              ]}>
+                {@conversation.status}
+              </span>
             </div>
-            <span :if={map_size(@online_users) > 3} class="text-xs text-success font-medium">
-              +{map_size(@online_users) - 3} online
-            </span>
-            <span :if={map_size(@online_users) <= 3} class="text-xs text-success font-medium">
-              {map_size(@online_users)} online
-            </span>
-          </div>
 
-          <div :if={@is_admin} class="flex items-center gap-2">
-            <.icon name="hero-user-group" class="size-4 opacity-70" />
-            <form id="assign-agent-form" phx-change="assign_agent">
-              <select name="agent_id" class="select select-bordered select-sm select-primary">
-                <option value="">Unassigned</option>
-                <option
-                  :for={agent <- @agents}
-                  value={agent.id}
-                  selected={agent.id == @conversation.assigned_agent_id}
+            <div :if={@online_users != %{}} class="flex items-center gap-2">
+              <div class="flex -space-x-2">
+                <div
+                  :for={{_user_id, user} <- Enum.take(@online_users, 3)}
+                  class="relative"
                 >
-                  {agent.email}
-                </option>
-              </select>
-            </form>
+                  <div class="avatar placeholder">
+                    <div class="bg-success text-success-content rounded-full w-8 ring-2 ring-base-100">
+                      <span class="text-xs">
+                        {String.upcase(String.first(List.first(user.metas).email) || "U")}
+                      </span>
+                    </div>
+                  </div>
+                  <span class="absolute bottom-0 right-0 size-2.5 bg-success rounded-full ring-2 ring-base-100">
+                  </span>
+                </div>
+              </div>
+              <span :if={map_size(@online_users) > 3} class="text-xs text-success font-medium">
+                +{map_size(@online_users) - 3} online
+              </span>
+              <span :if={map_size(@online_users) <= 3} class="text-xs text-success font-medium">
+                {map_size(@online_users)} online
+              </span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div id="messages" phx-update="stream" class="space-y-4 mb-4 min-h-[200px]">
-        <div id="messages-empty" class="hidden only:block text-center py-12">
-          <.icon name="hero-chat-bubble-left-right" class="size-12 opacity-30 mx-auto mb-3" />
-          <p class="opacity-50">No messages yet. Send the first message!</p>
+        <div id="messages" phx-update="stream" class="space-y-4 mb-4 min-h-[200px]">
+          <div id="messages-empty" class="hidden only:block text-center py-12">
+            <.icon name="hero-chat-bubble-left-right" class="size-12 opacity-30 mx-auto mb-3" />
+            <p class="opacity-50">No messages yet. Send the first message!</p>
+          </div>
+          <div
+            :for={{id, message} <- @streams.messages}
+            id={id}
+            class={[
+              "chat",
+              message.sender_id == @current_user.id && "chat-end",
+              message.sender_id != @current_user.id && "chat-start"
+            ]}
+          >
+            <div class="chat-header mb-1">
+              <span class="text-xs font-bold">
+                {if message.sender_id == @current_user.id, do: "You", else: "Support"}
+              </span>
+              <time class="text-xs opacity-50">{relative_time(message.created_at)}</time>
+            </div>
+            <div class={[
+              "chat-bubble max-w-[80%]",
+              message.sender_id == @current_user.id && "chat-bubble-primary text-primary-content",
+              message.sender_id != @current_user.id && "chat-bubble-base-300"
+            ]}>
+              {message.body}
+            </div>
+          </div>
         </div>
-        <div
-          :for={{id, message} <- @streams.messages}
-          id={id}
-          class={[
-            "chat",
-            message.sender.email == @current_user.email && "chat-end",
-            message.sender.email != @current_user.email && "chat-start"
-          ]}
+
+        <.form
+          for={@message_form}
+          id="send-message-form"
+          phx-submit="send_message"
+          class="sticky bottom-0 bg-base-100 pt-4 pb-2 border-t border-base-300"
         >
-          <div class="chat-header mb-1">
-            <span class="text-xs font-bold">
-              {if message.sender.email == @current_user.email, do: "Me", else: message.sender.email}
-            </span>
-            <time class="text-xs opacity-50">{relative_time(message.created_at)}</time>
+          <div class="flex gap-2 items-end">
+            <.input
+              id={"message-body-#{@message_input_id}"}
+              field={@message_form[:body]}
+              type="textarea"
+              placeholder="Type your message..."
+              class="flex-1"
+            />
+            <.button class="btn btn-primary btn-circle shrink-0" phx-disable-with="...">
+              <.icon name="hero-paper-airplane" class="size-5" />
+            </.button>
           </div>
-          <div class={[
-            "chat-bubble max-w-[80%]",
-            message.sender.email == @current_user.email && "chat-bubble-primary text-primary-content",
-            message.sender.email != @current_user.email && "chat-bubble-base-300"
-          ]}>
-            {message.body}
-          </div>
-        </div>
+        </.form>
       </div>
-
-      <.form
-        for={@message_form}
-        id="send-message-form"
-        phx-submit="send_message"
-        class="sticky bottom-0 bg-base-100 pt-4 pb-2 border-t border-base-300"
-      >
-        <div class="flex gap-2 items-end">
-          <.input
-            id={"message-body-#{@message_input_id}"}
-            field={@message_form[:body]}
-            type="textarea"
-            placeholder="Type your message..."
-            class="flex-1"
-          />
-          <.button class="btn btn-primary btn-circle shrink-0" phx-disable-with="...">
-            <.icon name="hero-paper-airplane" class="size-5" />
-          </.button>
-        </div>
-      </.form>
     </Layouts.app>
     """
   end
@@ -140,7 +132,7 @@ defmodule AshDeskWeb.InboxLive.Show do
     {:noreply,
      socket
      |> put_flash(:error, "No organization found")
-     |> push_navigate(to: ~p"/inbox")}
+     |> push_navigate(to: ~p"/chat")}
   end
 
   @impl true
@@ -173,9 +165,8 @@ defmodule AshDeskWeb.InboxLive.Show do
 
             socket =
               socket
+              |> assign(:page_title, conversation.subject || "Conversation")
               |> assign(:conversation, conversation)
-              |> assign(:agents, [])
-              |> assign(:is_admin, false)
               |> assign(:message_topic, message_topic)
               |> assign(:meta_topic, meta_topic)
               |> assign(:presence_topic, presence_topic)
@@ -205,7 +196,7 @@ defmodule AshDeskWeb.InboxLive.Show do
             {:noreply,
              socket
              |> put_flash(:error, "Conversation not found")
-             |> push_navigate(to: ~p"/inbox")}
+             |> push_navigate(to: ~p"/chat")}
         end
     end
   end
@@ -240,47 +231,12 @@ defmodule AshDeskWeb.InboxLive.Show do
   end
 
   @impl true
-  def handle_event("assign_agent", %{"agent_id" => agent_id}, socket) do
-    agent_id = if agent_id == "", do: nil, else: agent_id
-
-    case AshDesk.Support.update_conversation(
-           socket.assigns.conversation,
-           %{assigned_agent_id: agent_id},
-           actor: socket.assigns.current_user,
-           tenant: socket.assigns.org.id
-         ) do
-      {:ok, conversation} ->
-        {:noreply, assign(socket, :conversation, conversation)}
-
-      {:error, reason} ->
-        {:noreply,
-         put_flash(
-           socket,
-           :error,
-           "Failed to assign: #{inspect(reason)}"
-         )}
-    end
-  end
-
-  @impl true
   def handle_async(
         :fetch_messages,
-        {:ok, {:ok, %{messages: messages, agents: agents, is_admin: is_admin}}},
+        {:ok, {:ok, %{messages: messages}}},
         socket
       ) do
-    {:noreply,
-     socket
-     |> stream(:messages, messages, reset: true)
-     |> assign(:agents, agents)
-     |> assign(:is_admin, is_admin)}
-  end
-
-  @impl true
-  def handle_async(:fetch_messages, {:ok, {:error, reason}}, socket) do
-    require Logger
-    Logger.error("fetch_messages failed: #{inspect(reason)}")
-
-    {:noreply, put_flash(socket, :error, "Failed to load conversation. Please try again.")}
+    {:noreply, stream(socket, :messages, messages, reset: true)}
   end
 
   @impl true

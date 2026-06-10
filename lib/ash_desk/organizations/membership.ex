@@ -41,7 +41,7 @@ defmodule AshDesk.Organizations.Membership do
     uuid_primary_key :id
 
     attribute :role, :atom do
-      constraints one_of: [:admin, :agent]
+      constraints one_of: [:admin, :agent, :customer]
       default :agent
       public? true
     end

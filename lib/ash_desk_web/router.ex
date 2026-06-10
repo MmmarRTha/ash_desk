@@ -27,11 +27,9 @@ defmodule AshDeskWeb.Router do
     ash_authentication_live_session :authenticated_routes do
       live "/inbox", InboxLive.Index, :index
       live "/inbox/:id", InboxLive.Show, :show
+      live "/chat", ChatLive.Index, :index
+      live "/chat/:id", ChatLive.Show, :show
     end
-  end
-
-  scope "/", AshDeskWeb do
-    pipe_through :browser
 
     get "/", PageController, :home
     auth_routes AuthController, AshDesk.Accounts.User, path: "/auth"
