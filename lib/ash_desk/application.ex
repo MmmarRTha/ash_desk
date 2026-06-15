@@ -13,6 +13,8 @@ defmodule AshDesk.Application do
       {DNSCluster, query: Application.get_env(:ash_desk, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: AshDesk.PubSub},
       AshDeskWeb.Presence,
+      {Registry, keys: :unique, name: AshDesk.TypingRegistry},
+      {DynamicSupervisor, strategy: :one_for_one, name: AshDesk.TypingSupervisor},
       # Start a worker by calling: AshDesk.Worker.start_link(arg)
       # {AshDesk.Worker, arg},
       # Start to serve requests, typically the last entry
