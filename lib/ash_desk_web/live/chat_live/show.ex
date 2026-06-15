@@ -128,7 +128,7 @@ defmodule AshDeskWeb.ChatLive.Show do
   end
 
   @impl true
-  def handle_params(_params, _uri, %{assigns: %{organization_missing: true}} = socket) do
+  def handle_params(_params, _uri, %{assigns: %{org_missing: true}} = socket) do
     {:noreply,
      socket
      |> put_flash(:error, "No organization found")
