@@ -1,5 +1,6 @@
 defmodule AshDeskWeb.InboxLive.Show do
   use AshDeskWeb, :live_view
+  use AshDeskWeb.TypingIndicator
 
   on_mount {AshDeskWeb.LiveUserAuth, :live_user_required}
   on_mount {AshDeskWeb.LiveUserAuth, :current_user}
@@ -52,8 +53,7 @@ defmodule AshDeskWeb.InboxLive.Show do
                     </span>
                   </div>
                 </div>
-                <span class="absolute bottom-0 right-0 size-2.5 bg-success rounded-full ring-2 ring-base-100">
-                </span>
+                <span class="absolute bottom-0 right-0 size-2.5 bg-success rounded-full ring-2 ring-base-100"></span>
               </div>
             </div>
             <span :if={map_size(@online_users) > 3} class="text-xs text-success font-medium">
@@ -112,6 +112,11 @@ defmodule AshDeskWeb.InboxLive.Show do
         </div>
       </div>
 
+      <div :if={@typing_users != %{}} class="text-sm text-success/70 mb-2 flex items-center gap-1.5">
+        <span class="loading loading-dots loading-xs"></span>
+        {AshDeskWeb.TypingIndicator.typing_text(@typing_users)}
+      </div>
+
       <.form
         for={@message_form}
         id="send-message-form"
@@ -125,6 +130,7 @@ defmodule AshDeskWeb.InboxLive.Show do
             type="textarea"
             placeholder="Type your message..."
             class="flex-1"
+            phx-hook="TypingIndicator"
           />
           <.button class="btn btn-primary btn-circle shrink-0" phx-disable-with="...">
             <.icon name="hero-paper-airplane" class="size-5" />
@@ -179,6 +185,7 @@ defmodule AshDeskWeb.InboxLive.Show do
               |> assign(:message_topic, message_topic)
               |> assign(:meta_topic, meta_topic)
               |> assign(:presence_topic, presence_topic)
+              |> AshDeskWeb.TypingIndicator.setup_typing(conversation_id)
               |> assign(:online_users, %{})
               |> assign(:message_input_id, 0)
               |> assign(:message_form, to_form(%{"body" => ""}, id: "send-message-form"))
@@ -341,6 +348,8 @@ defmodule AshDeskWeb.InboxLive.Show do
         Phoenix.PubSub.unsubscribe(AshDesk.PubSub, topic)
       end
 
+      AshDeskWeb.TypingIndicator.unsubscribe(socket)
+
       case socket.assigns[:presence_topic] do
         topic when is_binary(topic) and not is_nil(user_id) ->
           AshDeskWeb.Presence.untrack(self(), topic, user_id)
@@ -365,6 +374,7 @@ defmodule AshDeskWeb.InboxLive.Show do
     Phoenix.PubSub.subscribe(AshDesk.PubSub, message_topic)
     Phoenix.PubSub.subscribe(AshDesk.PubSub, meta_topic)
     Phoenix.PubSub.subscribe(AshDesk.PubSub, presence_topic)
+    AshDeskWeb.TypingIndicator.subscribe(socket)
 
     AshDeskWeb.Presence.track(
       self(),
@@ -387,7 +397,8 @@ defmodule AshDeskWeb.InboxLive.Show do
     [
       socket.assigns[:message_topic],
       socket.assigns[:meta_topic],
-      socket.assigns[:presence_topic]
+      socket.assigns[:presence_topic],
+      socket.assigns[:typing_topic]
     ]
   end
 
