@@ -39,6 +39,21 @@ defmodule AshDeskWeb.InboxLive.Show do
         </div>
 
         <div class="flex items-center gap-4">
+          <div :if={@can_change_status} class="flex items-center gap-1">
+            <button
+              :for={s <- [:open, :pending, :resolved]}
+              phx-click="change_status"
+              phx-value-status={s}
+              class={[
+                "btn btn-xs rounded-full",
+                @conversation.status == s && "btn-primary",
+                @conversation.status != s && "btn-ghost"
+              ]}
+            >
+              {s}
+            </button>
+          </div>
+
           <%!-- Online presence indicator --%>
           <div :if={@online_users != %{}} class="flex items-center gap-2">
             <div class="flex -space-x-2">
@@ -182,6 +197,7 @@ defmodule AshDeskWeb.InboxLive.Show do
               |> assign(:conversation, conversation)
               |> assign(:agents, [])
               |> assign(:is_admin, false)
+              |> assign(:can_change_status, false)
               |> assign(:message_topic, message_topic)
               |> assign(:meta_topic, meta_topic)
               |> assign(:presence_topic, presence_topic)
@@ -247,6 +263,25 @@ defmodule AshDeskWeb.InboxLive.Show do
   end
 
   @impl true
+  def handle_event("change_status", %{"status" => status}, socket) do
+    status = String.to_existing_atom(status)
+    current_user = socket.assigns.current_user
+
+    case AshDesk.Support.change_conversation_status(
+           socket.assigns.conversation,
+           status,
+           actor: current_user,
+           tenant: socket.assigns.org.id
+         ) do
+      {:ok, conversation} ->
+        {:noreply, assign(socket, :conversation, conversation)}
+
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, "Failed to change status: #{inspect(reason)}")}
+    end
+  end
+
+  @impl true
   def handle_event("assign_agent", %{"agent_id" => agent_id}, socket) do
     agent_id = if agent_id == "", do: nil, else: agent_id
 
@@ -272,14 +307,22 @@ defmodule AshDeskWeb.InboxLive.Show do
   @impl true
   def handle_async(
         :fetch_messages,
-        {:ok, {:ok, %{messages: messages, agents: agents, is_admin: is_admin}}},
+        {:ok,
+         {:ok,
+          %{
+            messages: messages,
+            agents: agents,
+            is_admin: is_admin,
+            can_change_status: can_change_status
+          }}},
         socket
       ) do
     {:noreply,
      socket
      |> stream(:messages, messages, reset: true)
      |> assign(:agents, agents)
-     |> assign(:is_admin, is_admin)}
+     |> assign(:is_admin, is_admin)
+     |> assign(:can_change_status, can_change_status)}
   end
 
   @impl true
@@ -414,11 +457,14 @@ defmodule AshDeskWeb.InboxLive.Show do
              tenant: org.id,
              load: [:user]
            ) do
+      current_membership = Enum.find(memberships, &(&1.user_id == current_user.id))
+
       {:ok,
        %{
          messages: messages,
          agents: Enum.map(memberships, & &1.user),
-         is_admin: Enum.any?(memberships, &(&1.user_id == current_user.id and &1.role == :admin))
+         is_admin: current_membership && current_membership.role == :admin,
+         can_change_status: current_membership && current_membership.role in [:admin, :agent]
        }}
     end
   end

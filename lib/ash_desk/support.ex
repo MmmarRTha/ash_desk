@@ -11,9 +11,11 @@ defmodule AshDesk.Support do
       define :get_conversation_by_id, action: :read, get_by: :id
       define :list_conversations, action: :read
       define :list_conversations_for_agent, action: :list_assigned_to
+      define :list_conversations_by_status, action: :list_by_status, args: [:status]
       define :update_conversation, action: :update
       define :list_conversations_for_customer, action: :list_for_customer, args: [:customer_id]
       define :create_conversation_by_customer, action: :create_by_customer, args: [:subject]
+      define :change_conversation_status, action: :change_status, args: [:status]
     end
 
     resource AshDesk.Support.Message do
