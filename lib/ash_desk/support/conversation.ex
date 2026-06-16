@@ -38,6 +38,22 @@ defmodule AshDesk.Support.Conversation do
       filter expr(customer_id == ^arg(:customer_id))
       prepare build(sort: [created_at: :desc])
     end
+
+    read :list_by_status do
+      description "List conversations filtered by status"
+
+      argument :status, :atom,
+        constraints: [one_of: [:open, :pending, :resolved]],
+        allow_nil?: false
+
+      filter expr(status == ^arg(:status))
+      prepare build(sort: [created_at: :desc])
+      prepare build(load: [:assigned_agent])
+    end
+
+    update :change_status do
+      accept [:status]
+    end
   end
 
   policies do
@@ -54,9 +70,24 @@ defmodule AshDesk.Support.Conversation do
       authorize_if expr(exists(organization.memberships, user_id == ^actor(:id)))
     end
 
-    policy action_type([:update, :destroy]) do
+    policy action(:update) do
       authorize_if expr(
                      exists(organization.memberships, user_id == ^actor(:id) and role == :admin)
+                   )
+    end
+
+    policy action(:destroy) do
+      authorize_if expr(
+                     exists(organization.memberships, user_id == ^actor(:id) and role == :admin)
+                   )
+    end
+
+    policy action(:change_status) do
+      authorize_if expr(
+                     exists(
+                       organization.memberships,
+                       user_id == ^actor(:id) and role in [:admin, :agent]
+                     )
                    )
     end
   end

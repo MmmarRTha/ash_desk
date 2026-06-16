@@ -14,11 +14,13 @@ defmodule AshDeskWeb.InboxLive.Index do
 
         socket
         |> assign(:org, nil)
+        |> assign(:status_filter, nil)
         |> stream(:conversations, [])
-        |> start_async(:fetch_inbox, fn -> fetch_inbox_data(current_user) end)
+        |> start_async(:fetch_inbox, fn -> fetch_inbox_data(current_user, nil) end)
       else
         socket
         |> assign(:org, nil)
+        |> assign(:status_filter, nil)
         |> stream(:conversations, [])
       end
 
@@ -29,10 +31,32 @@ defmodule AshDeskWeb.InboxLive.Index do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_user}>
-      <div class="flex justify-between items-center mb-6">
+      <div class="flex justify-between items-center mb-4">
         <h1 class="text-2xl font-bold">
           {if @org, do: "#{@org.name} — Inbox", else: "Loading..."}
         </h1>
+      </div>
+
+      <div class="flex gap-1.5 mb-4">
+        <button
+          :for={
+            {value, label} <- [
+              {nil, "All"},
+              {:open, "Open"},
+              {:pending, "Pending"},
+              {:resolved, "Resolved"}
+            ]
+          }
+          phx-click="filter_status"
+          phx-value-status={if value == nil, do: "", else: Atom.to_string(value)}
+          class={[
+            "btn btn-sm rounded-full",
+            @status_filter == value && "btn-primary",
+            @status_filter != value && "btn-ghost"
+          ]}
+        >
+          {label}
+        </button>
       </div>
 
       <div id="conversations" phx-update="stream">
@@ -97,6 +121,20 @@ defmodule AshDeskWeb.InboxLive.Index do
   end
 
   @impl true
+  def handle_event("filter_status", %{"status" => status}, socket) do
+    status_filter = if status == "", do: nil, else: String.to_existing_atom(status)
+    current_user = socket.assigns.current_user
+
+    socket =
+      socket
+      |> assign(:status_filter, status_filter)
+      |> cancel_async(:fetch_inbox)
+      |> start_async(:fetch_inbox, fn -> fetch_inbox_data(current_user, status_filter) end)
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_async(:fetch_inbox, {:ok, %{org: org, conversations: conversations}}, socket) do
     socket =
       socket
@@ -157,40 +195,21 @@ defmodule AshDeskWeb.InboxLive.Index do
     {:noreply, stream_insert(socket, :conversations, conversation, at: 0)}
   end
 
-  defp fetch_inbox_data(current_user) do
+  defp fetch_inbox_data(current_user, status_filter) do
     case AshDesk.Organizations.list_organizations(actor: current_user) do
       {:ok, [org | _]} ->
-        {:ok, memberships} =
-          AshDesk.Organizations.list_memberships(
-            actor: current_user,
-            tenant: org.id,
-            load: [:user]
-          )
-
-        current_membership = Enum.find(memberships, &(&1.user_id == current_user.id))
-        is_admin = current_membership && current_membership.role == :admin
+        opts = [actor: current_user, tenant: org.id]
 
         conversations =
-          if is_admin do
-            case AshDesk.Support.list_conversations(actor: current_user, tenant: org.id) do
-              {:ok, convs} ->
-                {:ok, loaded} = Ash.load(convs, [:assigned_agent], actor: current_user)
-                loaded
-
-              {:error, _} ->
-                []
+          if status_filter do
+            case AshDesk.Support.list_conversations_by_status(status_filter, opts) do
+              {:ok, convs} -> convs
+              {:error, _} -> []
             end
           else
-            case AshDesk.Support.list_conversations_for_agent(
-                   %{agent_id: current_user.id},
-                   actor: current_user,
-                   tenant: org.id
-                 ) do
-              {:ok, convs} ->
-                convs
-
-              {:error, _} ->
-                []
+            case AshDesk.Support.list_conversations(opts ++ [load: [:assigned_agent]]) do
+              {:ok, convs} -> convs
+              {:error, _} -> []
             end
           end
 
