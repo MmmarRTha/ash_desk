@@ -12,7 +12,20 @@ defmodule AshDeskWeb.InboxLive.Show do
 
     case AshDesk.Organizations.list_organizations(actor: current_user) do
       {:ok, [org | _]} ->
-        {:ok, assign(socket, :org, org)}
+        membership =
+          case AshDesk.Organizations.list_memberships(
+                 actor: current_user,
+                 tenant: org.id
+               ) do
+            {:ok, ms} -> Enum.find(ms, &(&1.user_id == current_user.id))
+            _ -> nil
+          end
+
+        if membership && membership.role == :customer do
+          {:ok, redirect(socket, to: ~p"/chat")}
+        else
+          {:ok, assign(socket, :org, org)}
+        end
 
       _ ->
         {:ok,
