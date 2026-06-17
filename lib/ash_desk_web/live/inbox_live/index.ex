@@ -4,6 +4,8 @@ defmodule AshDeskWeb.InboxLive.Index do
   on_mount {AshDeskWeb.LiveUserAuth, :live_user_required}
   on_mount {AshDeskWeb.LiveUserAuth, :current_user}
 
+  import AshDeskWeb.Helpers
+
   @impl true
   def mount(_params, _session, socket) do
     socket = assign(socket, :page_title, "Inbox")
@@ -219,19 +221,4 @@ defmodule AshDeskWeb.InboxLive.Index do
         %{org: nil, conversations: []}
     end
   end
-
-  defp relative_time(%DateTime{} = datetime) do
-    diff = DateTime.diff(DateTime.utc_now(), datetime, :second)
-
-    cond do
-      diff < 60 -> "just now"
-      diff < 3600 -> "#{div(diff, 60)} min ago"
-      diff < 86400 -> "#{div(diff, 3600)} hour ago"
-      diff < 604_800 -> "#{div(diff, 86400)} day ago"
-      diff < 2_592_000 -> "#{div(diff, 86400)} days ago"
-      true -> Calendar.strftime(datetime, "%b %d, %Y")
-    end
-  end
-
-  defp relative_time(_), do: ""
 end
