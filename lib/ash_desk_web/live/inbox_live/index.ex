@@ -57,17 +57,16 @@ defmodule AshDeskWeb.InboxLive.Index do
           tenant={@org.id}
           page_size={[default: 25, options: [10, 25, 50, 100]]}
           theme="daisy_ui"
-          show_filters={:toggle}
           query_opts={[load: [:assigned_agent]]}
           click={fn conv -> JS.navigate(~p"/inbox/#{conv.id}") end}
         >
-          <:col :let={conv} field="assigned_agent.email" label="Agent" filter sort search>
+          <:col :let={conv} field="assigned_agent.email" label="Agent" sort>
             {(conv.assigned_agent && conv.assigned_agent.email) || "Unassigned"}
           </:col>
-          <:col :let={conv} field="subject" label="Subject" search>
+          <:col :let={conv} field="subject" label="Subject">
             {conv.subject || "—"}
           </:col>
-          <:col :let={conv} field="status" filter sort>
+          <:col :let={conv} field="status" sort>
             {conv.status}
           </:col>
           <:col :let={conv} field="created_at" label="Date" sort>
