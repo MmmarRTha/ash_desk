@@ -71,7 +71,7 @@ defmodule AshDeskWeb.InboxLiveTest do
 
       assert has_element?(view, ~s/a[href="#{~p"/inbox"}"]/)
       assert html =~ "Hello! Need help."
-      assert html =~ "Me"
+      assert html =~ "You"
       assert has_element?(view, "#send-message-form")
     end
 

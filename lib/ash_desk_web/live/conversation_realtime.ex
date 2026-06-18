@@ -23,12 +23,12 @@ defmodule AshDeskWeb.ConversationRealtime do
 
             {:noreply,
              socket
-             |> stream_insert(:messages, message, at: 0)
+             |> stream_insert(:messages, message)
              |> assign(:message_form, to_form(%{"body" => ""}, id: "send-message-form"))
              |> update(:message_input_id, &(&1 + 1))}
 
           {:error, reason} ->
-            {:noreply, put_flash(socket, :error, "Failed to send message: #{inspect(reason)}")}
+            {:noreply, put_flash(socket, :error, "Message cannot be blank")}
         end
       end
 
@@ -53,7 +53,7 @@ defmodule AshDeskWeb.ConversationRealtime do
             },
             socket
           ) do
-        {:noreply, stream_insert(socket, :messages, message, at: 0)}
+        {:noreply, stream_insert(socket, :messages, message)}
       end
 
       @impl true

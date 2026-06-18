@@ -3,6 +3,8 @@ defmodule AshDeskWeb.ChatLive.Show do
   use AshDeskWeb.TypingIndicator
   use AshDeskWeb.ConversationRealtime
 
+  import AshDeskWeb.ChatComponents
+
   on_mount {AshDeskWeb.LiveUserAuth, :live_user_required}
   on_mount {AshDeskWeb.LiveUserAuth, :current_user}
 
@@ -38,97 +40,32 @@ defmodule AshDeskWeb.ChatLive.Show do
           <div class="flex items-center justify-between">
             <div>
               <h1 class="text-2xl font-bold">{@conversation.subject || "Conversation"}</h1>
-              <span class={[
-                "badge mt-1",
-                @conversation.status == :open && "badge-success",
-                @conversation.status == :pending && "badge-warning",
-                @conversation.status == :resolved && "badge-ghost"
-              ]}>
-                {@conversation.status}
-              </span>
+              <.status_badge status={@conversation.status} />
             </div>
-
-            <div :if={@online_users != %{}} class="flex items-center gap-2">
-              <div class="flex -space-x-2">
-                <div
-                  :for={{_user_id, user} <- Enum.take(@online_users, 3)}
-                  class="relative"
-                >
-                  <div class="avatar placeholder">
-                    <div class="bg-success text-success-content rounded-full w-8 ring-2 ring-base-100">
-                      <span class="text-xs">
-                        {String.upcase(String.first(List.first(user.metas).email) || "U")}
-                      </span>
-                    </div>
-                  </div>
-                  <span class="absolute bottom-0 right-0 size-2.5 bg-success rounded-full ring-2 ring-base-100"></span>
-                </div>
-              </div>
-              <span :if={map_size(@online_users) > 3} class="text-xs text-success font-medium">
-                +{map_size(@online_users) - 3} online
-              </span>
-              <span :if={map_size(@online_users) <= 3} class="text-xs text-success font-medium">
-                {map_size(@online_users)} online
-              </span>
-            </div>
+            <.presence_indicators users={@online_users} />
           </div>
         </div>
 
         <div id="messages" phx-update="stream" class="space-y-4 mb-4 min-h-[200px]">
-          <div id="messages-empty" class="hidden only:block text-center py-12">
-            <.icon name="hero-chat-bubble-left-right" class="size-12 opacity-30 mx-auto mb-3" />
-            <p class="opacity-50">No messages yet. Send the first message!</p>
-          </div>
+          <.empty_state
+            :if={@streams.messages == []}
+            title="No messages yet"
+            message="Send the first message!"
+          />
           <div
             :for={{id, message} <- @streams.messages}
             id={id}
-            class={[
-              "chat",
-              message.sender_id == @current_user.id && "chat-end",
-              message.sender_id != @current_user.id && "chat-start"
-            ]}
+            style="--stagger-index: 0"
           >
-            <div class="chat-header mb-1">
-              <span class="text-xs font-bold">
-                {if message.sender_id == @current_user.id, do: "You", else: "Support"}
-              </span>
-              <time class="text-xs opacity-50">{relative_time(message.created_at)}</time>
-            </div>
-            <div class={[
-              "chat-bubble max-w-[80%]",
-              message.sender_id == @current_user.id && "chat-bubble-primary text-primary-content",
-              message.sender_id != @current_user.id && "chat-bubble-base-300"
-            ]}>
-              {message.body}
-            </div>
-          </div>
-        </div>
-
-        <div :if={@typing_users != %{}} class="text-sm text-success/70 mb-2 flex items-center gap-1.5">
-          <span class="loading loading-dots loading-xs"></span>
-          {AshDeskWeb.TypingIndicator.typing_text(@typing_users)}
-        </div>
-
-        <.form
-          for={@message_form}
-          id="send-message-form"
-          phx-submit="send_message"
-          class="sticky bottom-0 bg-base-100 pt-4 pb-2 border-t border-base-300"
-        >
-          <div class="flex gap-2 items-end">
-            <.input
-              id={"message-body-#{@message_input_id}"}
-              field={@message_form[:body]}
-              type="textarea"
-              placeholder="Type your message..."
-              class="flex-1"
-              phx-hook="TypingIndicator"
+            <.message_bubble
+              message={message}
+              current_user={@current_user}
             />
-            <.button class="btn btn-primary btn-circle shrink-0" phx-disable-with="...">
-              <.icon name="hero-paper-airplane" class="size-5" />
-            </.button>
           </div>
-        </.form>
+        </div>
+
+        <.typing_indicator users={@typing_users} />
+        <.message_input form={@message_form} input_id={@message_input_id} />
       </div>
     </Layouts.app>
     """
