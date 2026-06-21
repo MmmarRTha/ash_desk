@@ -23,7 +23,7 @@ defmodule AshDesk.Support.Message do
       description "List messages for a specific conversation"
       argument :conversation_id, :uuid, allow_nil?: false
       filter expr(conversation_id == ^arg(:conversation_id))
-      prepare build(load: [:sender], sort: [created_at: :desc])
+      prepare build(load: [:sender], sort: [created_at: :asc])
     end
   end
 
@@ -66,7 +66,7 @@ defmodule AshDesk.Support.Message do
     attribute :body, :string do
       allow_nil? false
       public? true
-      constraints max_length: 500
+      constraints min_length: 1, max_length: 200
     end
 
     create_timestamp :created_at

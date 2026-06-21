@@ -105,4 +105,40 @@
 /* Make LiveView wrapper divs transparent for layout */
 [data-phx-session], [data-phx-teleported-src] { display: contents }
 
+/* Message grouping — hide sender header on consecutive same-side messages */
+.chat-start + .chat-start .chat-header,
+.chat-end + .chat-end .chat-header { display: none }
+
+/* Safe area padding for mobile notches */
+.safe-area-bottom {
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0rem));
+}
+
+/* Message bubble smooth entrance */
+#messages[phx-update="stream"] > div:not(.hidden) {
+  animation: message-in 0.25s ease-out;
+}
+
+@keyframes message-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #messages[phx-update="stream"] > div:not(.hidden) {
+    animation: none;
+  }
+}
+
+/* Chat avatars - hide on consecutive same-side messages */
+.chat-start + .chat-start .chat-image,
+.chat-end + .chat-end .chat-image {
+  display: none;
+}
+
+/* Chat messages area scrolling */
+#messages {
+  scroll-behavior: smooth;
+}
+
 /* This file is for your main application CSS */

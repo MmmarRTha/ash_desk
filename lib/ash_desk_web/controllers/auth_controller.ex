@@ -3,7 +3,7 @@ defmodule AshDeskWeb.AuthController do
   use AshAuthentication.Phoenix.Controller
 
   def success(conn, activity, user, _token) do
-    return_to = get_session(conn, :return_to) || ~p"/"
+    return_to = get_session(conn, :return_to) || default_path_for(user)
 
     message =
       case activity do
@@ -51,5 +51,26 @@ defmodule AshDeskWeb.AuthController do
     |> clear_session(:ash_desk)
     |> put_flash(:info, "You are now signed out")
     |> redirect(to: return_to)
+  end
+
+  defp default_path_for(user) do
+    case AshDesk.Organizations.list_organizations(actor: user, authorize?: false) do
+      {:ok, orgs} ->
+        orgs
+        |> Enum.find_value(fn org ->
+          case AshDesk.Organizations.list_memberships(
+                 actor: user,
+                 tenant: org.id,
+                 authorize?: false,
+                 query: [filter: [user_id: user.id]]
+               ) do
+            {:ok, [%{role: role} | _]} when role in [:admin, :agent] -> ~p"/inbox"
+            _ -> nil
+          end
+        end) || ~p"/chat"
+
+      _ ->
+        ~p"/chat"
+    end
   end
 end
