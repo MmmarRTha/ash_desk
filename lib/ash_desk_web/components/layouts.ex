@@ -41,7 +41,7 @@ defmodule AshDeskWeb.Layouts do
           <!-- Navbar -->
           <div class="navbar bg-base-200/60 backdrop-blur-sm rounded-box mb-4 border border-base-300 px-4">
             <div class="flex-1">
-              <.link navigate={~p"/inbox"} class="flex items-center gap-2">
+              <.link navigate={~p"/"} class="flex items-center gap-2">
                 <.icon name="hero-chat-bubble-left-right" class="size-5 text-primary" />
                 <span class="text-sm font-bold">AshDesk</span>
               </.link>

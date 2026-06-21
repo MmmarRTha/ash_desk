@@ -197,16 +197,18 @@ defmodule AshDeskWeb.ChatComponents do
       class="sticky bottom-0 bg-base-100 pt-3 pb-1 border-t border-base-300"
     >
       <div class="flex gap-2 items-end">
-        <.input
-          id={"message-body-#{@input_id}"}
-          field={@form[:body]}
-          type="textarea"
-          placeholder={@placeholder}
-          class="flex-1 min-h-[40px] max-h-[120px]"
-          phx-hook="TypingIndicator"
-          rows="1"
-        />
-        <button class="btn btn-primary btn-circle shrink-0" phx-disable-with="...">
+        <div class="flex-1">
+          <.input
+            id={"message-body-#{@input_id}"}
+            field={@form[:body]}
+            type="textarea"
+            placeholder={@placeholder}
+            class="textarea w-full min-h-0"
+            phx-hook="TypingIndicator"
+            rows="1"
+          />
+        </div>
+        <button class="btn btn-primary btn-circle shrink-0">
           <.icon name="hero-paper-airplane" class="size-5" />
         </button>
       </div>
