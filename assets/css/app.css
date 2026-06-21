@@ -130,4 +130,15 @@
   }
 }
 
+/* Chat avatars - hide on consecutive same-side messages */
+.chat-start + .chat-start .chat-image,
+.chat-end + .chat-end .chat-image {
+  display: none;
+}
+
+/* Chat messages area scrolling */
+#messages {
+  scroll-behavior: smooth;
+}
+
 /* This file is for your main application CSS */

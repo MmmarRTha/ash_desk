@@ -28,25 +28,26 @@ defmodule AshDeskWeb.ChatLive.Show do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_user}>
-      <.link
-        navigate={~p"/chat"}
-        class="text-sm opacity-70 hover:opacity-100 inline-flex items-center gap-1 mb-4"
-      >
-        <.icon name="hero-arrow-left" class="size-4" /> Back to conversations
-      </.link>
-
-      <div class="max-w-2xl mx-auto">
-        <div class="mb-6">
-          <div class="flex items-center justify-between">
+      <div class="bg-base-200/80 backdrop-blur-sm rounded-box border border-base-300 p-6 flex flex-col h-[calc(100vh-12rem)]">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4 shrink-0">
+          <div class="flex items-center gap-3">
+            <.link
+              navigate={~p"/chat"}
+              class="btn btn-ghost btn-sm btn-circle"
+            >
+              <.icon name="hero-arrow-left" class="size-5" />
+            </.link>
             <div>
-              <h1 class="text-2xl font-bold">{@conversation.subject || "Conversation"}</h1>
+              <h1 class="text-lg font-semibold">{@conversation.subject || "Conversation"}</h1>
               <.status_badge status={@conversation.status} />
             </div>
-            <.presence_indicators users={@online_users} />
           </div>
+          <.presence_indicators users={@online_users} />
         </div>
 
-        <div id="messages" phx-update="stream" class="space-y-4 mb-4 min-h-[200px]">
+        <!-- Messages area -->
+        <div id="messages" phx-update="stream" class="flex-1 overflow-y-auto space-y-1 py-4">
           <.empty_state
             :if={@streams.messages == []}
             title="No messages yet"
@@ -55,17 +56,22 @@ defmodule AshDeskWeb.ChatLive.Show do
           <div
             :for={{id, message} <- @streams.messages}
             id={id}
-            style="--stagger-index: 0"
           >
             <.message_bubble
               message={message}
               current_user={@current_user}
+              online_users={@online_users}
             />
           </div>
         </div>
 
+        <!-- Typing indicator -->
         <.typing_indicator users={@typing_users} />
-        <.message_input form={@message_form} input_id={@message_input_id} />
+
+        <!-- Input area -->
+        <div class="shrink-0 pb-2">
+          <.message_input form={@message_form} input_id={@message_input_id} />
+        </div>
       </div>
     </Layouts.app>
     """

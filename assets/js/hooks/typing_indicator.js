@@ -12,7 +12,7 @@ const TypingIndicator = {
       this.timeout = setTimeout(() => {
         this.isTyping = false;
         this.pushEvent("stopped_typing", {});
-      }, 3000);
+      }, 2000);
     });
   },
 

@@ -45,48 +45,50 @@ defmodule AshDeskWeb.InboxLive.Index do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_user}>
-      <h1 class="text-2xl font-bold mb-4">
-        {if @org, do: "#{@org.name} — Inbox", else: "Loading..."}
-      </h1>
+      <div class="bg-base-200/80 backdrop-blur-sm rounded-box border border-base-300 p-6">
+        <h1 class="text-2xl font-bold mb-4">
+          {if @org, do: "#{@org.name} — Inbox", else: "Loading..."}
+        </h1>
 
-      <div :if={@org}>
-        <Cinder.collection
-          id="inbox-collection"
-          resource={AshDesk.Support.Conversation}
-          actor={@current_user}
-          tenant={@org.id}
-          page_size={[default: 25, options: [10, 25, 50, 100]]}
-          theme="daisy_ui"
-          query_opts={[load: [:assigned_agent]]}
-          click={fn conv -> JS.navigate(~p"/inbox/#{conv.id}") end}
-        >
-          <:col :let={conv} field="assigned_agent.email" label="Agent" sort>
-            {(conv.assigned_agent && conv.assigned_agent.email) || "Unassigned"}
-          </:col>
-          <:col :let={conv} field="subject" label="Subject">
-            {conv.subject || "—"}
-          </:col>
-          <:col :let={conv} field="status" sort>
-            {conv.status}
-          </:col>
-          <:col :let={conv} field="created_at" label="Date" sort>
-            {relative_time(conv.created_at)}
-          </:col>
+        <div :if={@org}>
+          <Cinder.collection
+            id="inbox-collection"
+            resource={AshDesk.Support.Conversation}
+            actor={@current_user}
+            tenant={@org.id}
+            page_size={[default: 25, options: [10, 25, 50, 100]]}
+            theme="daisy_ui"
+            query_opts={[load: [:assigned_agent]]}
+            click={fn conv -> JS.navigate(~p"/inbox/#{conv.id}") end}
+          >
+            <:col :let={conv} field="assigned_agent.email" label="Agent" sort>
+              {(conv.assigned_agent && conv.assigned_agent.email) || "Unassigned"}
+            </:col>
+            <:col :let={conv} field="subject" label="Subject">
+              {conv.subject || "—"}
+            </:col>
+            <:col :let={conv} field="status" sort>
+              {conv.status}
+            </:col>
+            <:col :let={conv} field="created_at" label="Date" sort>
+              {relative_time(conv.created_at)}
+            </:col>
 
-          <:empty :let={context}>
-            <div class="text-center py-16">
-              <.icon name="hero-chat-bubble-left-right" class="size-16 opacity-30 mx-auto mb-4" />
-              <h3 class="text-lg font-medium opacity-70">
-                {if context.filtered?,
-                  do: "No results match your filters.",
-                  else: "No conversations yet."}
-              </h3>
-              <p class="text-sm opacity-50 mt-1">
-                Conversations will appear here when customers reach out.
-              </p>
-            </div>
-          </:empty>
-        </Cinder.collection>
+            <:empty :let={context}>
+              <div class="text-center py-16">
+                <.icon name="hero-chat-bubble-left-right" class="size-16 opacity-30 mx-auto mb-4" />
+                <h3 class="text-lg font-medium opacity-70">
+                  {if context.filtered?,
+                    do: "No results match your filters.",
+                    else: "No conversations yet."}
+                </h3>
+                <p class="text-sm opacity-50 mt-1">
+                  Conversations will appear here when customers reach out.
+                </p>
+              </div>
+            </:empty>
+          </Cinder.collection>
+        </div>
       </div>
     </Layouts.app>
     """

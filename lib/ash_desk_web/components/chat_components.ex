@@ -9,6 +9,7 @@ defmodule AshDeskWeb.ChatComponents do
   """
   attr :message, :map, required: true
   attr :current_user, :map, required: true
+  attr :online_users, :map, default: %{}
   attr :on_retry, :string, default: nil
 
   def message_bubble(assigns) do

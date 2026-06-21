@@ -8,7 +8,7 @@ defmodule AshDeskWeb.ChatLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    socket = assign(socket, :page_title, "Support")
+    socket = assign(socket, page_title: "Support")
 
     socket =
       if connected?(socket) do
@@ -31,7 +31,7 @@ defmodule AshDeskWeb.ChatLive.Index do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_user}>
-      <div class="max-w-2xl mx-auto">
+      <div class="bg-base-200/80 backdrop-blur-sm rounded-box border border-base-300 p-6">
         <h1 class="text-2xl font-bold mb-6">Support</h1>
 
         <div class="card bg-base-200 border border-base-300 p-6 mb-8">
