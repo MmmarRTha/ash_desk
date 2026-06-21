@@ -64,7 +64,8 @@ defmodule AshDesk.Organizations.MembershipTest do
             organization_id: org.id
           },
           actor: user,
-          tenant: org.id
+          tenant: org.id,
+          authorize?: false
         )
 
       result =
@@ -74,7 +75,8 @@ defmodule AshDesk.Organizations.MembershipTest do
             organization_id: org.id
           },
           actor: user,
-          tenant: org.id
+          tenant: org.id,
+          authorize?: false
         )
 
       assert {:error, _} = result

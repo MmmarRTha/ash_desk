@@ -9,6 +9,7 @@ defmodule AshDesk.Organizations do
     resource AshDesk.Organizations.Organization do
       define :create_organization, action: :create
       define :list_organizations, action: :read
+      define :get_organization_by_id, action: :read, get_by: :id
       define :get_organization_by_slug, action: :read, get_by: :slug
       define :update_organization, action: :update
       define :delete_organization, action: :destroy
