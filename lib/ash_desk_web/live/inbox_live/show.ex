@@ -1,6 +1,9 @@
 defmodule AshDeskWeb.InboxLive.Show do
   use AshDeskWeb, :live_view
   use AshDeskWeb.TypingIndicator
+  use AshDeskWeb.ConversationRealtime
+
+  import AshDeskWeb.ChatComponents
 
   on_mount {AshDeskWeb.LiveUserAuth, :live_user_required}
   on_mount {AshDeskWeb.LiveUserAuth, :current_user}
@@ -11,7 +14,20 @@ defmodule AshDeskWeb.InboxLive.Show do
 
     case AshDesk.Organizations.list_organizations(actor: current_user) do
       {:ok, [org | _]} ->
-        {:ok, assign(socket, :org, org)}
+        membership =
+          case AshDesk.Organizations.list_memberships(
+                 actor: current_user,
+                 tenant: org.id
+               ) do
+            {:ok, ms} -> Enum.find(ms, &(&1.user_id == current_user.id))
+            _ -> nil
+          end
+
+        if membership && membership.role == :customer do
+          {:ok, redirect(socket, to: ~p"/chat")}
+        else
+          {:ok, assign(socket, :org, org)}
+        end
 
       _ ->
         {:ok,
@@ -25,133 +41,85 @@ defmodule AshDeskWeb.InboxLive.Show do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_user}>
-      <.link
-        navigate={~p"/inbox"}
-        class="text-sm opacity-70 hover:opacity-100 inline-flex items-center gap-1 mb-4"
-      >
-        <.icon name="hero-arrow-left" class="size-4" /> Back to Inbox
-      </.link>
-
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h1 class="text-2xl font-bold">{@org.name}</h1>
-          <p class="text-sm opacity-50">Conversation</p>
-        </div>
-
-        <div class="flex items-center gap-4">
-          <div :if={@can_change_status} class="flex items-center gap-1">
-            <button
-              :for={s <- [:open, :pending, :resolved]}
-              phx-click="change_status"
-              phx-value-status={s}
-              class={[
-                "btn btn-xs rounded-full",
-                @conversation.status == s && "btn-primary",
-                @conversation.status != s && "btn-ghost"
-              ]}
+      <div class="bg-base-200/80 backdrop-blur-sm rounded-box border border-base-300 p-6 flex flex-col h-[calc(100vh-12rem)]">
+        <!-- Header with status controls -->
+        <div class="flex items-center justify-between mb-4 shrink-0 flex-wrap gap-2">
+          <div class="flex items-center gap-3">
+            <.link
+              navigate={~p"/inbox"}
+              class="btn btn-ghost btn-sm btn-circle"
             >
-              {s}
-            </button>
-          </div>
-
-          <%!-- Online presence indicator --%>
-          <div :if={@online_users != %{}} class="flex items-center gap-2">
-            <div class="flex -space-x-2">
-              <div
-                :for={{_user_id, user} <- Enum.take(@online_users, 3)}
-                class="relative"
-              >
-                <div class="avatar placeholder">
-                  <div class="bg-success text-success-content rounded-full w-8 ring-2 ring-base-100">
-                    <span class="text-xs">
-                      {String.upcase(String.first(List.first(user.metas).email) || "U")}
-                    </span>
-                  </div>
-                </div>
-                <span class="absolute bottom-0 right-0 size-2.5 bg-success rounded-full ring-2 ring-base-100"></span>
-              </div>
+              <.icon name="hero-arrow-left" class="size-5" />
+            </.link>
+            <div>
+              <h1 class="text-lg font-semibold">{@org.name}</h1>
+              <p class="text-xs opacity-50">Conversation</p>
             </div>
-            <span :if={map_size(@online_users) > 3} class="text-xs text-success font-medium">
-              +{map_size(@online_users) - 3} online
-            </span>
-            <span :if={map_size(@online_users) <= 3} class="text-xs text-success font-medium">
-              {map_size(@online_users)} online
-            </span>
           </div>
 
-          <div :if={@is_admin} class="flex items-center gap-2">
-            <.icon name="hero-user-group" class="size-4 opacity-70" />
-            <form id="assign-agent-form" phx-change="assign_agent">
-              <select name="agent_id" class="select select-bordered select-sm select-primary">
-                <option value="">Unassigned</option>
-                <option
-                  :for={agent <- @agents}
-                  value={agent.id}
-                  selected={agent.id == @conversation.assigned_agent_id}
-                >
-                  {agent.email}
-                </option>
-              </select>
-            </form>
-          </div>
-        </div>
-      </div>
+          <div class="flex items-center gap-3">
+            <div :if={@can_change_status} class="flex items-center gap-1">
+              <button
+                :for={s <- [:open, :pending, :resolved]}
+                phx-click="change_status"
+                phx-value-status={s}
+                class={[
+                  "btn btn-xs rounded-full",
+                  @conversation.status == s && "btn-primary",
+                  @conversation.status != s && "btn-ghost"
+                ]}
+              >
+                {s}
+              </button>
+            </div>
 
-      <div id="messages" phx-update="stream" class="space-y-4 mb-4 min-h-[200px]">
-        <div id="messages-empty" class="hidden only:block text-center py-12">
-          <.icon name="hero-chat-bubble-left-right" class="size-12 opacity-30 mx-auto mb-3" />
-          <p class="opacity-50">No messages yet. Send the first message!</p>
-        </div>
-        <div
-          :for={{id, message} <- @streams.messages}
-          id={id}
-          class={[
-            "chat",
-            message.sender.email == @current_user.email && "chat-end",
-            message.sender.email != @current_user.email && "chat-start"
-          ]}
-        >
-          <div class="chat-header mb-1">
-            <span class="text-xs font-bold">
-              {if message.sender.email == @current_user.email, do: "Me", else: message.sender.email}
-            </span>
-            <time class="text-xs opacity-50">{relative_time(message.created_at)}</time>
-          </div>
-          <div class={[
-            "chat-bubble max-w-[80%]",
-            message.sender.email == @current_user.email && "chat-bubble-primary text-primary-content",
-            message.sender.email != @current_user.email && "chat-bubble-base-300"
-          ]}>
-            {message.body}
+            <.presence_indicators users={@online_users} />
+
+            <div :if={@is_admin} class="flex items-center gap-2">
+              <.icon name="hero-user-group" class="size-4 opacity-70" />
+              <form id="assign-agent-form" phx-change="assign_agent">
+                <select name="agent_id" class="select select-bordered select-sm select-primary">
+                  <option value="">Unassigned</option>
+                  <option
+                    :for={agent <- @agents}
+                    value={agent.id}
+                    selected={agent.id == @conversation.assigned_agent_id}
+                  >
+                    {agent.email}
+                  </option>
+                </select>
+              </form>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div :if={@typing_users != %{}} class="text-sm text-success/70 mb-2 flex items-center gap-1.5">
-        <span class="loading loading-dots loading-xs"></span>
-        {AshDeskWeb.TypingIndicator.typing_text(@typing_users)}
-      </div>
-
-      <.form
-        for={@message_form}
-        id="send-message-form"
-        phx-submit="send_message"
-        class="sticky bottom-0 bg-base-100 pt-4 pb-2 border-t border-base-300"
-      >
-        <div class="flex gap-2 items-end">
-          <.input
-            id={"message-body-#{@message_input_id}"}
-            field={@message_form[:body]}
-            type="textarea"
-            placeholder="Type your message..."
-            class="flex-1"
-            phx-hook="TypingIndicator"
+        <!-- Messages area -->
+        <div id="messages" phx-update="stream" class="flex-1 overflow-y-auto space-y-1 py-4">
+          <.empty_state
+            :if={@streams.messages == []}
+            title="No messages yet"
+            message="Send the first message!"
           />
-          <.button class="btn btn-primary btn-circle shrink-0" phx-disable-with="...">
-            <.icon name="hero-paper-airplane" class="size-5" />
-          </.button>
+          <div
+            :for={{id, message} <- @streams.messages}
+            id={id}
+          >
+            <.message_bubble
+              message={message}
+              current_user={@current_user}
+              online_users={@online_users}
+            />
+          </div>
         </div>
-      </.form>
+
+        <!-- Typing indicator -->
+        <.typing_indicator users={@typing_users} />
+
+        <!-- Input area -->
+        <div class="shrink-0 pb-2">
+          <.message_input form={@message_form} input_id={@message_input_id} />
+        </div>
+      </div>
     </Layouts.app>
     """
   end
@@ -234,35 +202,6 @@ defmodule AshDeskWeb.InboxLive.Show do
   end
 
   @impl true
-  def terminate(_reason, socket) do
-    user_id = socket.assigns[:current_user] && socket.assigns.current_user.id
-    leave_conversation(socket, user_id)
-    :ok
-  end
-
-  @impl true
-  def handle_event("send_message", %{"body" => body}, socket) do
-    current_user = socket.assigns.current_user
-    conversation = socket.assigns.conversation
-
-    case AshDesk.Support.create_message(%{body: body, conversation_id: conversation.id},
-           actor: current_user
-         ) do
-      {:ok, message} ->
-        {:ok, message} = Ash.load(message, [:sender], actor: current_user)
-
-        {:noreply,
-         socket
-         |> stream_insert(:messages, message, at: 0)
-         |> assign(:message_form, to_form(%{"body" => ""}, id: "send-message-form"))
-         |> update(:message_input_id, &(&1 + 1))}
-
-      {:error, reason} ->
-        {:noreply, put_flash(socket, :error, "Failed to send message: #{inspect(reason)}")}
-    end
-  end
-
-  @impl true
   def handle_event("change_status", %{"status" => status}, socket) do
     status = String.to_existing_atom(status)
     current_user = socket.assigns.current_user
@@ -341,110 +280,6 @@ defmodule AshDeskWeb.InboxLive.Show do
     {:noreply, put_flash(socket, :error, "Failed to load conversation. Please try again.")}
   end
 
-  @impl true
-  def handle_info(:load_presence, socket) do
-    {:noreply,
-     assign(
-       socket,
-       :online_users,
-       AshDeskWeb.Presence.list(socket.assigns.presence_topic)
-     )}
-  end
-
-  @impl true
-  def handle_info(%{event: "presence_diff"}, socket) do
-    {:noreply,
-     assign(
-       socket,
-       :online_users,
-       AshDeskWeb.Presence.list(socket.assigns.presence_topic)
-     )}
-  end
-
-  @impl true
-  def handle_info(
-        %Phoenix.Socket.Broadcast{
-          topic: "conversation:messages:" <> _,
-          event: "create",
-          payload: %Ash.Notifier.Notification{data: message}
-        },
-        socket
-      ) do
-    {:noreply, stream_insert(socket, :messages, message, at: 0)}
-  end
-
-  @impl true
-  def handle_info(
-        %Phoenix.Socket.Broadcast{
-          topic: "conversation:meta:" <> _,
-          event: "update",
-          payload: %Ash.Notifier.Notification{data: conversation}
-        },
-        socket
-      ) do
-    {:noreply, assign(socket, :conversation, conversation)}
-  end
-
-  defp leave_conversation(socket, user_id) do
-    if connected?(socket) do
-      for topic <- conversation_topics(socket), is_binary(topic) do
-        Phoenix.PubSub.unsubscribe(AshDesk.PubSub, topic)
-      end
-
-      AshDeskWeb.TypingIndicator.unsubscribe(socket)
-
-      case socket.assigns[:presence_topic] do
-        topic when is_binary(topic) and not is_nil(user_id) ->
-          AshDeskWeb.Presence.untrack(self(), topic, user_id)
-
-        _ ->
-          :ok
-      end
-    end
-
-    socket
-  end
-
-  defp join_conversation(
-         socket,
-         current_user,
-         message_topic,
-         meta_topic,
-         presence_topic,
-         conversation_id,
-         org
-       ) do
-    Phoenix.PubSub.subscribe(AshDesk.PubSub, message_topic)
-    Phoenix.PubSub.subscribe(AshDesk.PubSub, meta_topic)
-    Phoenix.PubSub.subscribe(AshDesk.PubSub, presence_topic)
-    AshDeskWeb.TypingIndicator.subscribe(socket)
-
-    AshDeskWeb.Presence.track(
-      self(),
-      presence_topic,
-      current_user.id,
-      %{
-        email: to_string(current_user.email),
-        joined_at: System.system_time(:second)
-      }
-    )
-
-    send(self(), :load_presence)
-
-    start_async(socket, :fetch_messages, fn ->
-      fetch_conversation_data(conversation_id, current_user, org)
-    end)
-  end
-
-  defp conversation_topics(socket) do
-    [
-      socket.assigns[:message_topic],
-      socket.assigns[:meta_topic],
-      socket.assigns[:presence_topic],
-      socket.assigns[:typing_topic]
-    ]
-  end
-
   defp fetch_conversation_data(conversation_id, current_user, org) do
     with {:ok, messages} <-
            AshDesk.Support.list_messages_for_conversation(
@@ -468,19 +303,4 @@ defmodule AshDeskWeb.InboxLive.Show do
        }}
     end
   end
-
-  defp relative_time(%DateTime{} = datetime) do
-    diff = DateTime.diff(DateTime.utc_now(), datetime, :second)
-
-    cond do
-      diff < 60 -> "just now"
-      diff < 3600 -> "#{div(diff, 60)} min ago"
-      diff < 86400 -> "#{div(diff, 3600)} hour ago"
-      diff < 604_800 -> "#{div(diff, 86400)} day ago"
-      diff < 2_592_000 -> "#{div(diff, 86400)} days ago"
-      true -> Calendar.strftime(datetime, "%b %d, %Y")
-    end
-  end
-
-  defp relative_time(_), do: ""
 end

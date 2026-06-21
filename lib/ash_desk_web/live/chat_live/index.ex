@@ -4,9 +4,11 @@ defmodule AshDeskWeb.ChatLive.Index do
   on_mount {AshDeskWeb.LiveUserAuth, :live_user_required}
   on_mount {AshDeskWeb.LiveUserAuth, :current_user}
 
+  import AshDeskWeb.Helpers
+
   @impl true
   def mount(_params, _session, socket) do
-    socket = assign(socket, :page_title, "Support")
+    socket = assign(socket, page_title: "Support")
 
     socket =
       if connected?(socket) do
@@ -29,7 +31,7 @@ defmodule AshDeskWeb.ChatLive.Index do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_user}>
-      <div class="max-w-2xl mx-auto">
+      <div class="bg-base-200/80 backdrop-blur-sm rounded-box border border-base-300 p-6">
         <h1 class="text-2xl font-bold mb-6">Support</h1>
 
         <div class="card bg-base-200 border border-base-300 p-6 mb-8">
@@ -202,19 +204,4 @@ defmodule AshDeskWeb.ChatLive.Index do
 
     %{org: org, conversations: conversations}
   end
-
-  defp relative_time(%DateTime{} = datetime) do
-    diff = DateTime.diff(DateTime.utc_now(), datetime, :second)
-
-    cond do
-      diff < 60 -> "just now"
-      diff < 3600 -> "#{div(diff, 60)} min ago"
-      diff < 86400 -> "#{div(diff, 3600)} hour ago"
-      diff < 604_800 -> "#{div(diff, 86400)} day ago"
-      diff < 2_592_000 -> "#{div(diff, 86400)} days ago"
-      true -> Calendar.strftime(datetime, "%b %d, %Y")
-    end
-  end
-
-  defp relative_time(_), do: ""
 end

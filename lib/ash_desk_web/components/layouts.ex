@@ -35,51 +35,40 @@ defmodule AshDeskWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <header class="navbar bg-base-200 shadow-sm px-4 sm:px-6 lg:px-8">
-      <div class="flex-1">
-        <.link navigate={~p"/inbox"} class="flex items-center gap-2">
-          <.icon name="hero-chat-bubble-left-ellipsis" class="size-6 text-primary" />
-          <span class="text-lg font-bold">AshDesk</span>
-        </.link>
-      </div>
-      <div class="flex-none gap-2">
-        <.link navigate={~p"/inbox"} class="btn btn-ghost btn-sm">
-          <.icon name="hero-inbox" class="size-5" />
-          <span class="hidden sm:inline">Inbox</span>
-        </.link>
-        <.theme_toggle />
-        <div :if={@current_scope} class="dropdown dropdown-end">
-          <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar placeholder">
-            <div class="bg-primary text-primary-content rounded-full w-10">
-              <span class="text-sm">
-                {String.upcase(String.first(to_string(@current_scope.email)))}
-              </span>
+    <div class="relative min-h-screen overflow-hidden">
+      <div class="relative px-4 py-8">
+        <div class="mx-auto max-w-5xl">
+          <!-- Navbar -->
+          <div class="navbar bg-base-200/60 backdrop-blur-sm rounded-box mb-4 border border-base-300 px-4">
+            <div class="flex-1">
+              <.link navigate={~p"/inbox"} class="flex items-center gap-2">
+                <.icon name="hero-chat-bubble-left-right" class="size-5 text-primary" />
+                <span class="text-sm font-bold">AshDesk</span>
+              </.link>
+            </div>
+            <div class="flex-none flex items-center gap-2 sm:gap-4">
+              <div :if={@current_scope} class="flex items-center gap-2 sm:gap-4 text-sm">
+                <span class="text-base-content/70 truncate max-w-[100px] sm:max-w-none">
+                  Welcome, {@current_scope.email}
+                </span>
+                <.link
+                  href="/sign-out"
+                  method="delete"
+                  class="text-base-content/60 hover:text-primary transition-colors duration-200"
+                >
+                  Sign Out
+                </.link>
+              </div>
+              <.theme_toggle />
             </div>
           </div>
-          <ul
-            tabindex="0"
-            class="menu menu-sm dropdown-content bg-base-200 rounded-box z-10 mt-3 w-52 p-2 shadow-lg border border-base-300"
-          >
-            <li class="menu-title">
-              <span class="opacity-70">{@current_scope.email}</span>
-            </li>
-            <li>
-              <.link href="/sign-out" method="delete" class="text-error">
-                <.icon name="hero-arrow-right-on-rectangle" class="size-4" /> Sign out
-              </.link>
-            </li>
-          </ul>
+
+          {render_slot(@inner_block)}
         </div>
       </div>
-    </header>
 
-    <main class="px-4 py-8 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-2xl space-y-4">
-        {render_slot(@inner_block)}
-      </div>
-    </main>
-
-    <.flash_group flash={@flash} />
+      <.flash_group flash={@flash} />
+    </div>
     """
   end
 
@@ -137,27 +126,30 @@ defmodule AshDeskWeb.Layouts do
       <div class="absolute w-1/3 h-full rounded-full border-1 border-base-200 bg-base-100 brightness-200 left-0 [[data-theme=light]_&]:left-1/3 [[data-theme=dark]_&]:left-2/3 transition-[left]" />
 
       <button
-        class="flex p-2 cursor-pointer w-1/3"
+        class="flex p-1 sm:p-2 cursor-pointer w-1/3"
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="system"
       >
-        <.icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.icon
+          name="hero-computer-desktop-micro"
+          class="size-3 sm:size-4 opacity-75 hover:opacity-100"
+        />
       </button>
 
       <button
-        class="flex p-2 cursor-pointer w-1/3"
+        class="flex p-1 sm:p-2 cursor-pointer w-1/3"
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="light"
       >
-        <.icon name="hero-sun-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.icon name="hero-sun-micro" class="size-3 sm:size-4 opacity-75 hover:opacity-100" />
       </button>
 
       <button
-        class="flex p-2 cursor-pointer w-1/3"
+        class="flex p-1 sm:p-2 cursor-pointer w-1/3"
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="dark"
       >
-        <.icon name="hero-moon-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.icon name="hero-moon-micro" class="size-3 sm:size-4 opacity-75 hover:opacity-100" />
       </button>
     </div>
     """

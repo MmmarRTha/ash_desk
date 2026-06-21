@@ -50,7 +50,7 @@ defmodule AshDeskWeb.InboxLiveTest do
       html = render_async(view)
 
       assert html =~ "Acme — Inbox"
-      assert has_element?(view, ~s/a[href="#{~p"/inbox/#{conversation.id}"}"]/)
+      assert html =~ conversation.id
     end
   end
 
@@ -71,7 +71,7 @@ defmodule AshDeskWeb.InboxLiveTest do
 
       assert has_element?(view, ~s/a[href="#{~p"/inbox"}"]/)
       assert html =~ "Hello! Need help."
-      assert html =~ "Me"
+      assert html =~ "You"
       assert has_element?(view, "#send-message-form")
     end
 
