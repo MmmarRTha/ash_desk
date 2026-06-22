@@ -284,7 +284,7 @@ defmodule AshDeskWeb.CoreComponents do
     ~H"""
     <div class="fieldset mb-2">
       <label for={@id}>
-        <span :if={@label} class="label mb-1">{@label}</span>
+        <span :if={@label} class="label">{@label}</span>
         <input
           type={@type}
           name={@name}
