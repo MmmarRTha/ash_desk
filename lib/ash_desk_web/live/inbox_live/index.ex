@@ -33,7 +33,8 @@ defmodule AshDeskWeb.InboxLive.Index do
               socket
             end
 
-          {:ok, assign(socket, org: org, page_title: "Inbox")}
+          is_admin = membership && membership.role == :admin
+          {:ok, assign(socket, org: org, page_title: "Inbox", is_admin: is_admin)}
         end
 
       _ ->
@@ -44,7 +45,7 @@ defmodule AshDeskWeb.InboxLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_user}>
+    <Layouts.app flash={@flash} current_scope={@current_user} admin={@is_admin}>
       <div class="bg-base-200/80 backdrop-blur-sm rounded-box border border-base-300 p-6">
         <h1 class="text-2xl font-bold mb-4">
           {if @org, do: "#{@org.name} — Inbox", else: "Loading..."}

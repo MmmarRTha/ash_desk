@@ -40,7 +40,7 @@ defmodule AshDeskWeb.InboxLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_user}>
+    <Layouts.app flash={@flash} current_scope={@current_user} admin={@is_admin}>
       <div class="bg-base-200/80 backdrop-blur-sm rounded-box border border-base-300 p-6 flex flex-col h-[calc(100vh-12rem)]">
         <!-- Header with status controls -->
         <div class="flex items-center justify-between mb-4 shrink-0 flex-wrap gap-2">

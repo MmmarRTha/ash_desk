@@ -29,6 +29,8 @@ defmodule AshDeskWeb.Router do
       live "/inbox/:id", InboxLive.Show, :show
       live "/chat", ChatLive.Index, :index
       live "/chat/:id", ChatLive.Show, :show
+      live "/admin", AdminLive.Index, :index
+      live "/admin/organizations/:id/members", AdminLive.OrganizationMembers, :show
     end
 
     get "/", PageController, :home
