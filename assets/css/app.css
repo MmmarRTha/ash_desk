@@ -1,7 +1,7 @@
 /* See the Tailwind configuration guide for advanced usage
    https://tailwindcss.com/docs/configuration */
 
-@import "tailwindcss" source(none);
+@import "tailwindcss";
 @import "../../deps/cinder/priv/cinder.css";
 @import "../../deps/cinder/priv/themes/daisy_ui.css";
 @source "../../deps/ash_authentication_phoenix";
@@ -17,7 +17,9 @@
    curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui.js
    Make sure to look at the daisyUI changelog: https://daisyui.com/docs/changelog/ */
 @plugin "../vendor/daisyui" {
-    themes: pastel --default, night --prefersdark;
+    themes:
+        pastel --default,
+        night --prefersdark;
 }
 
 /* Using daisyUI built-in themes: pastel (light) & night (dark) */
@@ -65,15 +67,15 @@
 
 /* Customer message bubble — pink background */
 .chat-bubble.chat-bubble-customer {
-  background-color: #fce4ec;
-  color: #1f2937;
-  border: 1px solid #f8bbd0;
+    background-color: #fce4ec;
+    color: #1f2937;
+    border: 1px solid #f8bbd0;
 }
 
 [data-theme="night"] .chat-bubble.chat-bubble-customer {
-  background-color: #5c2a3a;
-  color: #fce4ec;
-  border: 1px solid #8b4a5a;
+    background-color: #5c2a3a;
+    color: #fce4ec;
+    border: 1px solid #8b4a5a;
 }
 
 /* This file is for your main application CSS */
