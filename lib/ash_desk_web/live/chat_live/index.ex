@@ -142,6 +142,13 @@ defmodule AshDeskWeb.ChatLive.Index do
         assign(socket, :conversation_topic, nil)
       end
 
+    socket =
+      if connected?(socket) and is_nil(org) do
+        push_navigate(socket, to: ~p"/pending")
+      else
+        socket
+      end
+
     {:noreply, socket}
   end
 
@@ -170,38 +177,7 @@ defmodule AshDeskWeb.ChatLive.Index do
   end
 
   defp fetch_portal_data(current_user) do
-    case AshDesk.Organizations.list_organizations(actor: current_user) do
-      {:ok, [org | _]} ->
-        load_customer_conversations(current_user, org)
-
-      _ ->
-        case AshDesk.Organizations.list_organizations(actor: current_user, authorize?: false) do
-          {:ok, [org | _]} ->
-            AshDesk.Organizations.create_membership(
-              %{user_id: current_user.id, organization_id: org.id, role: :customer},
-              actor: current_user,
-              tenant: org.id
-            )
-
-            load_customer_conversations(current_user, org)
-
-          _ ->
-            %{org: nil, conversations: []}
-        end
-    end
-  end
-
-  defp load_customer_conversations(current_user, org) do
-    conversations =
-      case AshDesk.Support.list_conversations_for_customer(
-             current_user.id,
-             actor: current_user,
-             tenant: org.id
-           ) do
-        {:ok, convs} -> convs
-        _ -> []
-      end
-
-    %{org: org, conversations: conversations}
+    {:ok, portal} = AshDesk.Support.load_customer_portal(current_user)
+    portal
   end
 end

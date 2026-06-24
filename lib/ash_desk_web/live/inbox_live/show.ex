@@ -129,7 +129,7 @@ defmodule AshDeskWeb.InboxLive.Show do
     {:noreply,
      socket
      |> put_flash(:error, "No organization found")
-     |> push_navigate(to: ~p"/inbox")}
+     |> push_navigate(to: ~p"/pending")}
   end
 
   @impl true

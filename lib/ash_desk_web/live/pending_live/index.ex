@@ -8,30 +8,21 @@ defmodule AshDeskWeb.PendingLive.Index do
   def mount(_params, _session, socket) do
     current_user = socket.assigns.current_user
 
-    case AshDesk.Organizations.list_organizations(actor: current_user, authorize?: false) do
-      {:ok, [org | _]} ->
-        case AshDesk.Organizations.list_memberships(
-               actor: current_user,
-               tenant: org.id,
-               authorize?: false,
-               query: [filter: [user_id: current_user.id]]
-             ) do
-          {:ok, [%{role: :admin} | _]} ->
-            {:ok, redirect(socket, to: ~p"/inbox")}
+    socket =
+      case Ash.load(current_user, :org_role) do
+        {:ok, user} ->
+          case user.org_role do
+            :admin -> redirect(socket, to: ~p"/inbox")
+            :agent -> redirect(socket, to: ~p"/inbox")
+            :customer -> redirect(socket, to: ~p"/chat")
+            :none -> assign(socket, page_title: "Access Pending")
+          end
 
-          {:ok, [%{role: :agent} | _]} ->
-            {:ok, redirect(socket, to: ~p"/inbox")}
+        _ ->
+          assign(socket, page_title: "Access Pending")
+      end
 
-          {:ok, [%{role: :customer} | _]} ->
-            {:ok, redirect(socket, to: ~p"/chat")}
-
-          _ ->
-            {:ok, assign(socket, page_title: "Access Pending")}
-        end
-
-      _ ->
-        {:ok, assign(socket, page_title: "Access Pending")}
-    end
+    {:ok, socket}
   end
 
   @impl true
