@@ -65,12 +65,13 @@ defmodule AshDeskWeb.AuthController do
                  query: [filter: [user_id: user.id]]
                ) do
             {:ok, [%{role: role} | _]} when role in [:admin, :agent] -> ~p"/inbox"
+            {:ok, [%{role: :customer} | _]} -> ~p"/chat"
             _ -> nil
           end
-        end) || ~p"/chat"
+        end) || ~p"/pending"
 
       _ ->
-        ~p"/chat"
+        ~p"/pending"
     end
   end
 end

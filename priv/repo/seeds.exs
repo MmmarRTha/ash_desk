@@ -3,31 +3,27 @@
 admin =
   Ash.Seed.seed!(AshDesk.Accounts.User, %{
     email: "admin@ashdesk.com",
-    hashed_password: hashed_password,
-    role: :admin
+    hashed_password: hashed_password
   })
 
 Ash.Seed.seed!(AshDesk.Accounts.User, %{
   email: "agent1@ashdesk.com",
-  hashed_password: hashed_password,
-  role: :agent
+  hashed_password: hashed_password
 })
 
-customer =
-  Ash.Seed.seed!(AshDesk.Accounts.User, %{
-    email: "customer@ashdesk.com",
-    hashed_password: hashed_password,
-    role: :customer
-  })
+Ash.Seed.seed!(AshDesk.Accounts.User, %{
+  email: "customer@ashdesk.com",
+  hashed_password: hashed_password
+})
 
 {:ok, org} = AshDesk.Organizations.create_organization(%{name: "KATS Inc"}, actor: admin)
 
-# {:ok, _membership} =
-#   AshDesk.Organizations.create_membership(
-#     %{user_id: admin.id, organization_id: org.id, role: :admin},
-#     actor: admin,
-#     tenant: org.id
-#   )
+{:ok, _membership} =
+  AshDesk.Organizations.create_membership(
+    %{user_id: admin.id, organization_id: org.id, role: :admin},
+    actor: admin,
+    tenant: org.id
+  )
 
 # {:ok, _membership} =
 #   AshDesk.Organizations.create_membership(
