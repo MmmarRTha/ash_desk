@@ -69,7 +69,7 @@ defmodule AshDeskWeb.ChatLive.Show do
         <.typing_indicator users={@typing_users} />
 
         <!-- Input area -->
-        <div class="shrink-0 pb-2">
+        <div class="">
           <.message_input form={@message_form} input_id={@message_input_id} />
         </div>
       </div>

@@ -19,22 +19,22 @@ defmodule AshDeskWeb.ChatComponents do
       message_same_user?(@message, @current_user) && "chat-end",
       !message_same_user?(@message, @current_user) && "chat-start"
     ]}>
-      <div class="chat-header mb-1">
+      <div class="mb-1">
         <span class="text-xs font-bold">
           {message_sender_name(@message, @current_user)}
         </span>
         <time class="text-xs opacity-50">{relative_time(@message.created_at)}</time>
       </div>
       <div class={[
-        "chat-bubble max-w-[80%]",
+        "chat-bubble max-w-[80%] rounded-xl",
         message_same_user?(@message, @current_user) && "chat-bubble-primary text-primary-content",
-        !message_same_user?(@message, @current_user) && "chat-bubble-base-300",
+        !message_same_user?(@message, @current_user) && "chat-bubble-customer",
         Map.get(@message, :status) == :sending && "opacity-60",
         Map.get(@message, :status) == :failed && "border-2 border-error"
       ]}>
         <p class="whitespace-pre-wrap break-words">{@message.body}</p>
         <div class="flex items-center justify-end gap-1 mt-1">
-          <time class="text-[10px] opacity-50">
+          <time class="text-[10px] opacity-70">
             {formatted_time(@message.created_at)}
           </time>
           <span
@@ -124,22 +124,12 @@ defmodule AshDeskWeb.ChatComponents do
   def presence_indicators(assigns) do
     ~H"""
     <div :if={@users != %{}} class="flex items-center gap-2">
-      <div class="flex -space-x-2">
-        <div
-          :for={{_user_id, user} <- Enum.take(@users, @max_display)}
-          class="relative"
-        >
-          <div class="avatar placeholder">
-            <div class="bg-success text-success-content rounded-full w-8 ring-2 ring-base-100">
-              <span class="text-xs">
-                {presence_initial(user)}
-              </span>
-            </div>
-          </div>
-          <span class="absolute bottom-0 right-0 size-2.5 bg-success rounded-full ring-2 ring-base-100" />
+      <div class="flex gap-0.5">
+        <div :for={{_user_id, user} <- Enum.take(@users, @max_display)}>
+          <span class="text-sm">{presence_emoji(user)}</span>
         </div>
       </div>
-      <span class="text-xs text-success font-medium">
+      <span class="text-xs text-blue-500 font-medium">
         {presence_count_text(@users, @max_display)}
       </span>
     </div>
@@ -194,20 +184,19 @@ defmodule AshDeskWeb.ChatComponents do
       for={@form}
       id="send-message-form"
       phx-submit="send_message"
-      class="sticky bottom-0 bg-base-100 pt-3 pb-1 border-t border-base-300"
     >
-      <div class="flex gap-2 items-end">
+      <div class="relative">
         <.input
           id={"message-body-#{@input_id}"}
           field={@form[:body]}
           type="textarea"
           placeholder={@placeholder}
-          class="flex-1 min-h-[40px] max-h-[120px]"
+          class="w-full pr-12 p-2 py-3 bg-white rounded-md text-black"
           phx-hook="TypingIndicator"
           rows="1"
         />
-        <button class="btn btn-primary btn-circle shrink-0" phx-disable-with="...">
-          <.icon name="hero-paper-airplane" class="size-5" />
+        <button class="btn btn-primary btn-sm absolute rounded-full bottom-4 right-1.5">
+          <.icon name="hero-paper-airplane" class="size-4" />
         </button>
       </div>
     </.form>
@@ -273,14 +262,19 @@ defmodule AshDeskWeb.ChatComponents do
     end
   end
 
-  defp presence_initial(user) do
-    email =
+  defp presence_emoji(user) do
+    role =
       case user.metas do
-        [meta | _] -> meta.email
-        _ -> ""
+        [meta | _] -> Map.get(meta, :role)
+        _ -> nil
       end
 
-    String.upcase(String.first(email) || "U")
+    case role do
+      "admin" -> "👩‍💻"
+      "agent" -> "🤓"
+      "customer" -> "😺"
+      _ -> "🐱"
+    end
   end
 
   defp presence_count_text(users, max) do
