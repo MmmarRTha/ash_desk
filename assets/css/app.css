@@ -18,11 +18,11 @@
    Make sure to look at the daisyUI changelog: https://daisyui.com/docs/changelog/ */
 @plugin "../vendor/daisyui" {
     themes:
-        pastel --default,
-        night --prefersdark;
+        caramellatte --default,
+        aqua --prefersdark;
 }
 
-/* Using daisyUI built-in themes: pastel (light) & night (dark) */
+/* Using daisyUI built-in themes: retro (light) & aqua (dark) */
 
 /* Add variants based on LiveView classes */
 @custom-variant phx-click-loading (.phx-click-loading&, .phx-click-loading &);
@@ -30,7 +30,7 @@
 @custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
 
 /* Use the data attribute for dark mode  */
-@custom-variant dark (&:where([data-theme=night], [data-theme=night] *));
+@custom-variant dark (&:where([data-theme=aqua], [data-theme=aqua] *));
 
 /* Make LiveView wrapper divs transparent for layout */
 [data-phx-session],
@@ -72,7 +72,7 @@
     border: 1px solid #f8bbd0;
 }
 
-[data-theme="night"] .chat-bubble.chat-bubble-customer {
+[data-theme="aqua"] .chat-bubble.chat-bubble-customer {
     background-color: #5c2a3a;
     color: #fce4ec;
     border: 1px solid #8b4a5a;
