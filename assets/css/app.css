@@ -72,10 +72,10 @@
     border: 1px solid #f8bbd0;
 }
 
-[data-theme="aqua"] .chat-bubble.chat-bubble-customer {
-    background-color: #5c2a3a;
+/*[data-theme="aqua"] .chat-bubble.chat-bubble-customer {
+    background-color: #8b4a5a;
     color: #fce4ec;
     border: 1px solid #8b4a5a;
-}
+}*/
 
 /* This file is for your main application CSS */

@@ -259,9 +259,9 @@ defmodule AshDesk.Accounts.User do
               :atom,
               expr(
                 cond do
-                  exists(memberships, role === :admin) -> :admin
-                  exists(memberships, role === :agent) -> :agent
-                  exists(memberships, role === :customer) -> :customer
+                  exists(memberships, role == :admin) -> :admin
+                  exists(memberships, role == :agent) -> :agent
+                  exists(memberships, role == :customer) -> :customer
                   true -> :none
                 end
               )

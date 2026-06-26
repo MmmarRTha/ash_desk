@@ -54,7 +54,7 @@ defmodule AshDeskWeb.AuthController do
   end
 
   defp default_path_for(user) do
-    case Ash.load(user, :org_role) do
+    case Ash.load(user, :org_role, actor: user) do
       {:ok, user} ->
         case user.org_role do
           :admin -> ~p"/inbox"

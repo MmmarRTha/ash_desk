@@ -41,7 +41,7 @@ defmodule AshDeskWeb.InboxLive.Show do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_user} admin={@is_admin}>
-      <div class="bg-base-200/80 backdrop-blur-sm rounded-box border border-base-300 p-6 flex flex-col h-[calc(100vh-12rem)]">
+      <div class="bg-base-200/80 rounded-box border border-base-300 p-6 flex flex-col">
         <!-- Header with status controls -->
         <div class="flex items-center justify-between mb-4 shrink-0 flex-wrap gap-2">
           <div class="flex items-center gap-3">
@@ -65,7 +65,7 @@ defmodule AshDeskWeb.InboxLive.Show do
                 phx-value-status={s}
                 class={[
                   "btn btn-xs rounded-full",
-                  @conversation.status == s && "btn-primary",
+                  @conversation.status == s && "btn-accent",
                   @conversation.status != s && "btn-ghost"
                 ]}
               >
@@ -78,7 +78,7 @@ defmodule AshDeskWeb.InboxLive.Show do
             <div :if={@is_admin} class="flex items-center gap-2">
               <.icon name="hero-user-group" class="size-4 opacity-70" />
               <form id="assign-agent-form" phx-change="assign_agent">
-                <select name="agent_id" class="select select-bordered select-sm select-primary">
+                <select name="agent_id" class="select select-bordered select-sm text-accent">
                   <option value="">Unassigned</option>
                   <option
                     :for={agent <- @agents}

@@ -6,23 +6,7 @@ defmodule AshDeskWeb.PendingLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    current_user = socket.assigns.current_user
-
-    socket =
-      case Ash.load(current_user, :org_role) do
-        {:ok, user} ->
-          case user.org_role do
-            :admin -> redirect(socket, to: ~p"/inbox")
-            :agent -> redirect(socket, to: ~p"/inbox")
-            :customer -> redirect(socket, to: ~p"/chat")
-            :none -> assign(socket, page_title: "Access Pending")
-          end
-
-        _ ->
-          assign(socket, page_title: "Access Pending")
-      end
-
-    {:ok, socket}
+    {:ok, assign(socket, page_title: "Access Pending")}
   end
 
   @impl true
