@@ -55,6 +55,7 @@ defmodule AshDeskWeb.AdminLive.Index do
           <h3 class="text-lg font-medium opacity-70">No organizations to manage</h3>
           <p class="text-sm opacity-50 mt-1">
             You don't have admin access to any organization yet.
+            Contact your organization administrator to get access.
           </p>
         </div>
 

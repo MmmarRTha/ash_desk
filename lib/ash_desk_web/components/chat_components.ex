@@ -145,7 +145,7 @@ defmodule AshDeskWeb.ChatComponents do
     ~H"""
     <div
       :if={@users != %{}}
-      class="text-sm text-success/70 mb-2 flex items-center gap-1.5 transition-all"
+      class="text-xs mb-2 flex items-center gap-1.5 transition-all text-green-500 font-semibold"
     >
       <span class="loading loading-dots loading-xs" />
       {AshDeskWeb.TypingIndicator.typing_text(@users)}

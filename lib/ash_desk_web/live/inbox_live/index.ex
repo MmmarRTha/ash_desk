@@ -38,7 +38,7 @@ defmodule AshDeskWeb.InboxLive.Index do
         end
 
       _ ->
-        {:ok, assign(socket, org: nil, page_title: "Inbox")}
+        {:ok, redirect(socket, to: ~p"/pending")}
     end
   end
 

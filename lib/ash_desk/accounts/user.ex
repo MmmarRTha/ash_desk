@@ -250,6 +250,23 @@ defmodule AshDesk.Accounts.User do
     attribute :confirmed_at, :utc_datetime_usec
   end
 
+  relationships do
+    has_many :memberships, AshDesk.Organizations.Membership
+  end
+
+  calculations do
+    calculate :org_role,
+              :atom,
+              expr(
+                cond do
+                  exists(memberships, role == :admin) -> :admin
+                  exists(memberships, role == :agent) -> :agent
+                  exists(memberships, role == :customer) -> :customer
+                  true -> :none
+                end
+              )
+  end
+
   identities do
     identity :unique_email, [:email]
   end

@@ -24,4 +24,23 @@ defmodule AshDesk.Support do
       define :list_messages_for_conversation, action: :list_messages_for_conversation
     end
   end
+
+  def load_customer_portal(user) do
+    case AshDesk.Organizations.list_organizations(actor: user) do
+      {:ok, [org | _]} ->
+        conversations =
+          case AshDesk.Support.list_conversations_for_customer(user.id,
+                 actor: user,
+                 tenant: org.id
+               ) do
+            {:ok, convs} -> convs
+            _ -> []
+          end
+
+        {:ok, %{org: org, conversations: conversations}}
+
+      _ ->
+        {:ok, %{org: nil, conversations: []}}
+    end
+  end
 end

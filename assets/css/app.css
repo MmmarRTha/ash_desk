@@ -1,7 +1,7 @@
 /* See the Tailwind configuration guide for advanced usage
    https://tailwindcss.com/docs/configuration */
 
-@import "tailwindcss";
+@import "tailwindcss" source(none);
 @import "../../deps/cinder/priv/cinder.css";
 @import "../../deps/cinder/priv/themes/daisy_ui.css";
 @source "../../deps/ash_authentication_phoenix";
@@ -18,11 +18,11 @@
    Make sure to look at the daisyUI changelog: https://daisyui.com/docs/changelog/ */
 @plugin "../vendor/daisyui" {
     themes:
-        pastel --default,
-        night --prefersdark;
+        caramellatte --default,
+        coffee --prefersdark;
 }
 
-/* Using daisyUI built-in themes: pastel (light) & night (dark) */
+/* Using daisyUI built-in themes: retro (light) & coffee (dark) */
 
 /* Add variants based on LiveView classes */
 @custom-variant phx-click-loading (.phx-click-loading&, .phx-click-loading &);
@@ -30,7 +30,7 @@
 @custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
 
 /* Use the data attribute for dark mode  */
-@custom-variant dark (&:where([data-theme=night], [data-theme=night] *));
+@custom-variant dark (&:where([data-theme=coffee], [data-theme=coffee] *));
 
 /* Make LiveView wrapper divs transparent for layout */
 [data-phx-session],
@@ -67,15 +67,14 @@
 
 /* Customer message bubble — pink background */
 .chat-bubble.chat-bubble-customer {
-    background-color: #fce4ec;
+    background-color: #fccedd;
     color: #1f2937;
-    border: 1px solid #f8bbd0;
 }
 
-[data-theme="night"] .chat-bubble.chat-bubble-customer {
-    background-color: #5c2a3a;
+/*[data-theme="aqua"] .chat-bubble.chat-bubble-customer {
+    background-color: #8b4a5a;
     color: #fce4ec;
     border: 1px solid #8b4a5a;
-}
+}*/
 
 /* This file is for your main application CSS */
