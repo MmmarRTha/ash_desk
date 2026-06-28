@@ -82,7 +82,7 @@ defmodule AshDeskWeb.ChatLive.Show do
     {:noreply,
      socket
      |> put_flash(:error, "No organization found")
-     |> push_navigate(to: ~p"/chat")}
+     |> push_navigate(to: ~p"/pending")}
   end
 
   @impl true

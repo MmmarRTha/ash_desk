@@ -40,13 +40,13 @@ defmodule AshDeskWeb.Layouts do
   def app(assigns) do
     ~H"""
     <div class="relative min-h-screen overflow-hidden">
-      <div class="relative px-4 py-8">
+      <div class="relative px-4 py-2">
         <div class="mx-auto max-w-5xl">
           <!-- Navbar -->
-          <div class="navbar bg-base-200/60 backdrop-blur-sm rounded-box mb-4 border border-base-300 px-4">
+          <div class="navbar bg-base-200/60 rounded-box mb-4 border border-base-300 px-4">
             <div class="flex-1 flex items-center gap-1">
               <.link navigate={~p"/"} class="flex items-center gap-2">
-                <.icon name="hero-chat-bubble-left-right" class="size-5 text-primary" />
+                <.icon name="hero-chat-bubble-left-right" class="size-6 text-accent" />
                 <span class="text-sm font-bold">AshDesk</span>
               </.link>
               <.link
@@ -134,7 +134,7 @@ defmodule AshDeskWeb.Layouts do
   def theme_toggle(assigns) do
     ~H"""
     <div class="card relative flex flex-row items-center border-2 border-base-300 bg-base-300 rounded-full">
-      <div class="absolute w-1/3 h-full rounded-full border-1 border-base-200 bg-base-100 brightness-200 left-0 [[data-theme=pastel]_&]:left-1/3 [[data-theme=night]_&]:left-2/3 transition-[left]" />
+      <div class="absolute w-1/3 h-full rounded-full border-1 border-base-200 bg-base-100 brightness-200 left-0 [[data-theme=caramellatte]_&]:left-1/3 [[data-theme=aqua]_&]:left-2/3 transition-[left]" />
 
       <button
         class="flex p-1 sm:p-2 cursor-pointer w-1/3"
@@ -150,7 +150,7 @@ defmodule AshDeskWeb.Layouts do
       <button
         class="flex p-1 sm:p-2 cursor-pointer w-1/3"
         phx-click={JS.dispatch("phx:set-theme")}
-        data-phx-theme="pastel"
+        data-phx-theme="caramellatte"
       >
         <.icon name="hero-sun-micro" class="size-3 sm:size-4 opacity-75 hover:opacity-100" />
       </button>
@@ -158,7 +158,7 @@ defmodule AshDeskWeb.Layouts do
       <button
         class="flex p-1 sm:p-2 cursor-pointer w-1/3"
         phx-click={JS.dispatch("phx:set-theme")}
-        data-phx-theme="night"
+        data-phx-theme="aqua"
       >
         <.icon name="hero-moon-micro" class="size-3 sm:size-4 opacity-75 hover:opacity-100" />
       </button>

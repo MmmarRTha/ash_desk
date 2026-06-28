@@ -54,23 +54,17 @@ defmodule AshDeskWeb.AuthController do
   end
 
   defp default_path_for(user) do
-    case AshDesk.Organizations.list_organizations(actor: user, authorize?: false) do
-      {:ok, orgs} ->
-        orgs
-        |> Enum.find_value(fn org ->
-          case AshDesk.Organizations.list_memberships(
-                 actor: user,
-                 tenant: org.id,
-                 authorize?: false,
-                 query: [filter: [user_id: user.id]]
-               ) do
-            {:ok, [%{role: role} | _]} when role in [:admin, :agent] -> ~p"/inbox"
-            _ -> nil
-          end
-        end) || ~p"/chat"
+    case Ash.load(user, :org_role, actor: user) do
+      {:ok, user} ->
+        case user.org_role do
+          :admin -> ~p"/inbox"
+          :agent -> ~p"/inbox"
+          :customer -> ~p"/chat"
+          :none -> ~p"/pending"
+        end
 
       _ ->
-        ~p"/chat"
+        ~p"/pending"
     end
   end
 end
