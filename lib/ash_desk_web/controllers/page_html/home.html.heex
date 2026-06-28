@@ -45,23 +45,20 @@
   <div class="relative px-4 py-8">
     <div class="mx-auto max-w-5xl">
       <!-- Navbar -->
-      <div
-        data-theme="aqua"
-        class="navbar bg-base-200/80 glass rounded-box mb-4 border border-base-300 px-4"
-      >
+      <div class="navbar bg-base-200/80 glass rounded-box mb-4 border border-base-300 px-4">
         <div class="flex-1">
           <div class="flex items-center gap-2">
-            <.icon name="hero-chat-bubble-left-right" class="size-5 text-accent" />
-            <span class="text-sm font-bold text-accent">AshDesk</span>
+            <.icon name="hero-chat-bubble-left-right" class="size-5 text-amber-200" />
+            <span class="text-sm font-bold text-amber-200">AshDesk</span>
           </div>
         </div>
         <div class="flex-none flex items-center gap-2 sm:gap-4">
           <%= if assigns[:current_user] do %>
             <div class="flex items-center gap-2 sm:gap-4 text-sm">
-              <span class="text-accent truncate max-w-[100px] sm:max-w-none">Welcome, {@current_user.email}</span>
+              <span class="text-amber-200 truncate max-w-[100px] sm:max-w-none">Welcome, {@current_user.email}</span>
               <.link
                 navigate={~p"/sign-out"}
-                class="text-accent hover:text-secondary-content transition-colors duration-200"
+                class="text-amber-200 hover:text-white transition-colors duration-200"
               >
                 Sign Out
               </.link>
@@ -70,20 +67,19 @@
             <div class="flex items-center gap-4 text-sm">
               <.link
                 navigate={~p"/sign-in"}
-                class="text-accent hover:text-secondary-content transition-colors duration-200 font-semibold"
+                class="text-amber-200 hover:text-white transition-colors duration-200 font-semibold"
               >
                 Sign in
               </.link>
               <.link
                 navigate={~p"/register"}
-                class="text-accent hover:text-secondary-content transition-colors duration-200 font-semibold"
+                class="text-amber-200 hover:text-white transition-colors duration-200 font-semibold"
               >
                 Create an account
               </.link>
               <span class="text-base-content/20">|</span>
             </div>
           <% end %>
-          <Layouts.theme_toggle />
         </div>
       </div>
 
@@ -91,7 +87,7 @@
       <div class="text-center mb-4">
         <div class="flex justify-center mb-4 sm:mb-8">
           <div class="avatar placeholder">
-            <div data-theme="aqua" class="w-16 rounded-box bg-accent text-accent-content">
+            <div class="w-16 rounded-box bg-amber-200/80 text-black">
               <.icon name="hero-chat-bubble-left-right" class="size-12 mt-2" />
             </div>
           </div>
@@ -108,14 +104,11 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
         <!-- Agent / Admin card -->
         <.link navigate={~p"/inbox"} class="group block">
-          <div
-            data-theme="aqua"
-            class="relative p-5 sm:p-8 rounded-box bg-base-200/80 glass border border-base-300 transition-all duration-200 group-hover:border-primary/50 group-hover:shadow-lg group-hover:shadow-primary/5 group-hover:-translate-y-1 overflow-hidden"
-          >
+          <div class="relative p-5 sm:p-8 rounded-box bg-base-200/80 glass border border-base-300 transition-all duration-200 group-hover:border-primary/50 group-hover:shadow-lg group-hover:shadow-primary/5 group-hover:-translate-y-1 overflow-hidden">
             <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 transition-all duration-300 group-hover:bg-primary/10 group-hover:scale-110" />
             <div class="relative">
               <div class="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                <div class="flex items-center justify-center size-10 sm:size-12 rounded-xl bg-accent/10 text-accent">
+                <div class="flex items-center justify-center size-10 sm:size-12 rounded-xl bg-amber-200/10 text-amber-200">
                   <.icon name="hero-inbox-stack" class="size-6" />
                 </div>
                 <div>
@@ -128,7 +121,7 @@
               <p class="text-secondary-content/90 leading-relaxed text-xs sm:text-sm">
                 View and manage support conversations. Assign agents, update statuses, and help your customers quickly.
               </p>
-              <span class="inline-flex items-center gap-2 mt-4 sm:mt-6 text-sm font-semibold text-accent">
+              <span class="inline-flex items-center gap-2 mt-4 sm:mt-6 text-sm font-semibold text-amber-200">
                 Open Inbox
                 <.icon
                   name="hero-arrow-right"
@@ -141,14 +134,11 @@
 
         <!-- Customer card -->
         <.link navigate={~p"/chat"} class="group block">
-          <div
-            data-theme="aqua"
-            class="relative p-5 sm:p-8 rounded-box bg-base-200/80 glass border border-base-300 transition-all duration-200 group-hover:border-primary/50 group-hover:shadow-lg group-hover:shadow-primary/5 group-hover:-translate-y-1 overflow-hidden"
-          >
+          <div class="relative p-5 sm:p-8 rounded-box bg-base-200/80 glass border border-base-300 transition-all duration-200 group-hover:border-primary/50 group-hover:shadow-lg group-hover:shadow-primary/5 group-hover:-translate-y-1 overflow-hidden">
             <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 transition-all duration-300 group-hover:bg-primary/10 group-hover:scale-110" />
             <div class="relative">
               <div class="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                <div class="flex items-center justify-center size-10 sm:size-12 rounded-xl bg-accent/10 text-accent">
+                <div class="flex items-center justify-center size-10 sm:size-12 rounded-xl bg-amber-200/10 text-amber-200">
                   <.icon name="hero-chat-bubble-left-right" class="size-6" />
                 </div>
                 <div>
@@ -159,7 +149,7 @@
               <p class="text-secondary-content/90 leading-relaxed text-xs sm:text-sm">
                 Start a conversation with our support team. Track your requests and get the answers you need.
               </p>
-              <span class="inline-flex items-center gap-2 mt-4 sm:mt-6 text-sm font-semibold text-accent">
+              <span class="inline-flex items-center gap-2 mt-4 sm:mt-6 text-sm font-semibold text-amber-200">
                 Start Chat
                 <.icon
                   name="hero-arrow-right"
@@ -173,8 +163,8 @@
 
       <!-- Footer -->
       <footer
-        data-theme="aqua"
-        class="footer footer-center p-3 bg-base-200/80 glass text-accent rounded-box mt-9"
+        data-theme="pastel"
+        class="footer footer-center p-3 bg-base-200/80 glass text-amber-200 rounded-box mt-9"
       >
         <aside>
           <p class="font-bold">

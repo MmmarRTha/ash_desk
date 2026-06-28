@@ -64,8 +64,8 @@ defmodule AshDeskWeb.InboxLive.Show do
                 phx-click="change_status"
                 phx-value-status={s}
                 class={[
-                  "btn btn-xs rounded-full",
-                  @conversation.status == s && "btn-accent",
+                  "btn btn-xs rounded-xl",
+                  @conversation.status == s && "btn-success",
                   @conversation.status != s && "btn-ghost"
                 ]}
               >
@@ -76,9 +76,9 @@ defmodule AshDeskWeb.InboxLive.Show do
             <.presence_indicators users={@online_users} />
 
             <div :if={@is_admin} class="flex items-center gap-2">
-              <.icon name="hero-user-group" class="size-4 opacity-70" />
+              <.icon name="hero-user-group" class="size-4 opacity-80" />
               <form id="assign-agent-form" phx-change="assign_agent">
-                <select name="agent_id" class="select select-bordered select-sm text-accent">
+                <select name="agent_id" class="select select-bordered select-sm text-primary">
                   <option value="">Unassigned</option>
                   <option
                     :for={agent <- @agents}
