@@ -17,4 +17,14 @@ defmodule AshDeskWeb.AuthOverrides do
   # override AshAuthentication.Phoenix.Components.SignIn do
   #  set :show_banner, false
   # end
+  #
+  override AshAuthentication.Phoenix.Components.Banner do
+    set :image_url, nil
+    set :dark_image_url, nil
+
+    set :text_class,
+        "text-7xl font-bold bg-gradient-to-b from-primary to-secondary bg-clip-text"
+
+    set :text, "AshDesk"
+  end
 end
