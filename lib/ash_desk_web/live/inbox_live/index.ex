@@ -9,36 +9,37 @@ defmodule AshDeskWeb.InboxLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
+    {:ok, assign(socket, page_title: "Inbox")}
+  end
+
+  @impl true
+  def handle_params(%{"org_slug" => slug}, _uri, socket) do
     current_user = socket.assigns.current_user
 
-    case AshDesk.Organizations.list_organizations(actor: current_user) do
-      {:ok, [org | _]} ->
-        membership =
-          case AshDesk.Organizations.list_memberships(
-                 actor: current_user,
-                 tenant: org.id
-               ) do
-            {:ok, ms} -> Enum.find(ms, &(&1.user_id == current_user.id))
-            _ -> nil
-          end
+    org = AshDesk.Organizations.get_organization_by_slug!(slug, actor: current_user)
 
-        if membership && membership.role == :customer do
-          {:ok, redirect(socket, to: ~p"/chat")}
+    membership =
+      case AshDesk.Organizations.list_memberships(
+             actor: current_user,
+             tenant: org.id
+           ) do
+        {:ok, ms} -> Enum.find(ms, &(&1.user_id == current_user.id))
+        _ -> nil
+      end
+
+    if membership && membership.role == :customer do
+      {:noreply, push_navigate(socket, to: ~p"/#{slug}/chat")}
+    else
+      socket =
+        if connected?(socket) do
+          Phoenix.PubSub.subscribe(AshDesk.PubSub, "org:conversations:#{org.id}")
+          socket
         else
-          socket =
-            if connected?(socket) do
-              Phoenix.PubSub.subscribe(AshDesk.PubSub, "org:conversations:#{org.id}")
-              socket
-            else
-              socket
-            end
-
-          is_admin = membership && membership.role == :admin
-          {:ok, assign(socket, org: org, page_title: "Inbox", is_admin: is_admin)}
+          socket
         end
 
-      _ ->
-        {:ok, redirect(socket, to: ~p"/pending")}
+      is_admin = membership && membership.role == :admin
+      {:noreply, assign(socket, org: org, is_admin: is_admin)}
     end
   end
 
@@ -60,7 +61,7 @@ defmodule AshDeskWeb.InboxLive.Index do
             page_size={[default: 25, options: [10, 25, 50, 100]]}
             theme="daisy_ui"
             query_opts={[load: [:assigned_agent]]}
-            click={fn conv -> JS.navigate(~p"/inbox/#{conv.id}") end}
+            click={fn conv -> JS.navigate(~p"/#{@org.slug}/inbox/#{conv.id}") end}
           >
             <:col :let={conv} field="assigned_agent.email" label="Agent" sort>
               {(conv.assigned_agent && conv.assigned_agent.email) || "Unassigned"}

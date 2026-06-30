@@ -25,12 +25,12 @@ defmodule AshDeskWeb.Router do
     pipe_through :browser
 
     ash_authentication_live_session :authenticated_routes do
-      live "/inbox", InboxLive.Index, :index
-      live "/inbox/:id", InboxLive.Show, :show
-      live "/chat", ChatLive.Index, :index
-      live "/chat/:id", ChatLive.Show, :show
+      live "/:org_slug/inbox", InboxLive.Index, :index
+      live "/:org_slug/inbox/:id", InboxLive.Show, :show
+      live "/:org_slug/chat", ChatLive.Index, :index
+      live "/:org_slug/chat/:id", ChatLive.Show, :show
       live "/admin", AdminLive.Index, :index
-      live "/admin/organizations/:id/members", AdminLive.OrganizationMembers, :show
+      live "/admin/:slug/members", AdminLive.OrganizationMembers, :show
       live "/pending", PendingLive.Index, :index
     end
 
