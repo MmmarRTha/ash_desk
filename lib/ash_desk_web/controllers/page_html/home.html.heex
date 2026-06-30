@@ -42,14 +42,14 @@
     </svg>
   </div>
 
-  <div class="relative px-4 py-8">
+  <div class="relative px-4 py-4">
     <div class="mx-auto max-w-5xl">
       <!-- Navbar -->
       <div class="navbar bg-base-200 glass rounded-box mb-4 border border-base-300 px-4">
         <div class="flex-1">
           <div class="flex items-center gap-2">
             <.icon name="hero-chat-bubble-left-right" class="size-5" />
-            <h1 class="text-xl font-bold">AshDesk</h1>
+            <h1 class="text-lg md:text-xl font-bold">AshDesk</h1>
           </div>
         </div>
         <div class="flex-none flex items-center gap-2 sm:gap-4">
@@ -84,15 +84,15 @@
       </div>
 
       <!-- Hero section -->
-      <div class="text-center mb-4 mt-5">
+      <div class="text-center mb-4 mt-5 md:my-16">
         <div class="flex justify-center mb-4 sm:mb-8">
           <div class="avatar placeholder">
-            <div class="w-16 rounded-box bg-amber-200/80 text-black">
-              <.icon name="hero-chat-bubble-left-right" class="size-12 mt-2" />
+            <div class="w-10 md:w-16 rounded-box bg-amber-200/80 text-black">
+              <.icon name="hero-chat-bubble-left-right" class="md:size-12 my-2" />
             </div>
           </div>
         </div>
-        <h1 class="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl text-white">
+        <h1 class="text-3xl md:text-5xl font-bold tracking-tight lg:text-7xl text-white">
           Welcome to <span class="text-black">AshDesk</span>
         </h1>
         <p class="mt-4 text-lg sm:text-xl text-black max-w-2xl mx-auto leading-relaxed">
@@ -101,7 +101,7 @@
       </div>
 
       <!-- Role navigation cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
         <!-- Agent / Admin card -->
         <.link navigate={~p"/inbox"} class="group block">
           <div class="relative p-5 sm:p-8 rounded-box bg-base-200 glass border border-base-300 transition-all duration-200 group-hover:border-primary/50 group-hover:shadow-lg group-hover:shadow-primary/5 group-hover:-translate-y-1 overflow-hidden">
@@ -112,16 +112,16 @@
                   <.icon name="hero-inbox-stack" class="size-6" />
                 </div>
                 <div>
-                  <h2 class="text-lg sm:text-xl font-bold">
+                  <h2 class="text-xl font-bold">
                     Support Inbox
                   </h2>
-                  <p class="text-xs sm:text-sm">Agents &amp; Admins</p>
+                  <p class="text-sm">Agents &amp; Admins</p>
                 </div>
               </div>
-              <p class="leading-relaxed text-xs sm:text-sm">
+              <p class="leading-relaxed text-sm">
                 View and manage support conversations. Assign agents, update statuses, and help your customers quickly.
               </p>
-              <span class="inline-flex items-center gap-2 mt-4 sm:mt-6 text-sm font-semibold">
+              <span class="inline-flex items-center gap-2 mt-2 text-base font-semibold">
                 Open Inbox
                 <.icon
                   name="hero-arrow-right"
@@ -142,14 +142,14 @@
                   <.icon name="hero-chat-bubble-left-right" class="size-6" />
                 </div>
                 <div>
-                  <h2 class="text-lg sm:text-xl font-bold">Get Help</h2>
-                  <p class="text-xs sm:text-sm">Customers</p>
+                  <h2 class="text-xl font-bold">Get Help</h2>
+                  <p class="text-sm">Customers</p>
                 </div>
               </div>
-              <p class="leading-relaxed text-xs sm:text-sm">
+              <p class="leading-relaxed text-sm">
                 Start a conversation with our support team. Track your requests and get the answers you need.
               </p>
-              <span class="inline-flex items-center gap-2 mt-4 sm:mt-6 text-sm font-semibold">
+              <span class="inline-flex items-center gap-2 mt-2 text-base font-semibold">
                 Start Chat
                 <.icon
                   name="hero-arrow-right"
@@ -162,16 +162,13 @@
       </div>
 
       <!-- Footer -->
-      <footer
-        data-theme="pastel"
-        class="footer footer-center p-3 bg-base-200 glass rounded-box mt-9"
-      >
+      <footer class="footer footer-center p-3 bg-base-200 glass rounded-box mt-9 lg:mt-30">
         <aside>
-          <p class="font-bold text-base">
+          <p class="font-bold md:ltext-base">
             AshDesk. A Modern Support Inbox
           </p>
           <p>
-            © {Date.utc_today().year} | Martha M. Nieto. | Built with 💜✨ Elixir, Phoenix and Ash
+            Martha M. Nieto © {Date.utc_today().year} | Built with 💜Elixir, Phoenix and ✨Ash
           </p>
         </aside>
       </footer>
