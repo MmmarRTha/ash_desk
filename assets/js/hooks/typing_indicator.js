@@ -9,6 +9,13 @@ const TypingIndicator = {
         this.pushEvent("stopped_typing", {});
       }, 5000);
     });
+
+    this.el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        this.el.form?.requestSubmit();
+      }
+    });
   },
 
   destroyed() {

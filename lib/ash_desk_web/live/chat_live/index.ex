@@ -31,7 +31,7 @@ defmodule AshDeskWeb.ChatLive.Index do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_user}>
-      <div class="bg-base-200/80 backdrop-blur-sm rounded-box border border-base-300 p-6">
+      <div class="bg-base-200/80 rounded-box border border-base-300 p-6">
         <h1 class="text-2xl font-bold mb-6">Support</h1>
 
         <div class="card bg-base-200 border border-base-300 p-6 mb-8">
@@ -61,10 +61,8 @@ defmodule AshDeskWeb.ChatLive.Index do
           >
             <.link navigate={~p"/chat/#{conversation.id}"} class="block p-4">
               <div class="flex items-center gap-3">
-                <div class="avatar placeholder">
-                  <div class="bg-primary text-primary-content rounded-full w-10">
-                    <span class="text-sm font-bold">S</span>
-                  </div>
+                <div class="flex items-center justify-center shrink-0 bg-primary text-primary-content rounded-full w-8 h-8">
+                  <.icon name="hero-chat-bubble-left-ellipsis" class="size-5" />
                 </div>
                 <div class="flex-1 min-w-0">
                   <div class="flex justify-between items-center">
