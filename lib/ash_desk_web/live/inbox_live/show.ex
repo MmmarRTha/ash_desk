@@ -9,31 +9,24 @@ defmodule AshDeskWeb.InboxLive.Show do
   on_mount {AshDeskWeb.LiveUserAuth, :current_user}
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(%{"org_slug" => slug}, _session, socket) do
     current_user = socket.assigns.current_user
 
-    case AshDesk.Organizations.list_organizations(actor: current_user) do
-      {:ok, [org | _]} ->
-        membership =
-          case AshDesk.Organizations.list_memberships(
-                 actor: current_user,
-                 tenant: org.id
-               ) do
-            {:ok, ms} -> Enum.find(ms, &(&1.user_id == current_user.id))
-            _ -> nil
-          end
+    org = AshDesk.Organizations.get_organization_by_slug!(slug, actor: current_user)
 
-        if membership && membership.role == :customer do
-          {:ok, redirect(socket, to: ~p"/chat")}
-        else
-          {:ok, assign(socket, :org, org)}
-        end
+    membership =
+      case AshDesk.Organizations.list_memberships(
+             actor: current_user,
+             tenant: org.id
+           ) do
+        {:ok, ms} -> Enum.find(ms, &(&1.user_id == current_user.id))
+        _ -> nil
+      end
 
-      _ ->
-        {:ok,
-         socket
-         |> assign(:org, nil)
-         |> assign(:organization_missing, true)}
+    if membership && membership.role == :customer do
+      {:ok, redirect(socket, to: ~p"/#{slug}/chat")}
+    else
+      {:ok, assign(socket, :org, org)}
     end
   end
 
@@ -46,7 +39,7 @@ defmodule AshDeskWeb.InboxLive.Show do
         <div class="flex items-center justify-between mb-4 shrink-0 flex-wrap gap-2">
           <div class="flex items-center gap-3">
             <.link
-              navigate={~p"/inbox"}
+              navigate={~p"/#{@org.slug}/inbox"}
               class="btn btn-ghost btn-sm btn-circle"
             >
               <.icon name="hero-arrow-left" class="size-5" />
@@ -125,79 +118,66 @@ defmodule AshDeskWeb.InboxLive.Show do
   end
 
   @impl true
-  def handle_params(_params, _uri, %{assigns: %{organization_missing: true}} = socket) do
-    {:noreply,
-     socket
-     |> put_flash(:error, "No organization found")
-     |> push_navigate(to: ~p"/pending")}
-  end
+  def handle_params(%{"org_slug" => _slug, "id" => conversation_id} = _params, _uri, socket) do
+    org = socket.assigns.org
+    current_user = socket.assigns.current_user
 
-  @impl true
-  def handle_params(%{"id" => conversation_id}, _uri, socket) do
-    case socket.assigns[:org] do
-      nil ->
+    case AshDesk.Support.get_conversation_by_id(
+           conversation_id,
+           actor: current_user,
+           tenant: org.id
+         ) do
+      {:ok, conversation} ->
+        message_topic = "conversation:messages:#{conversation_id}"
+        meta_topic = "conversation:meta:#{conversation_id}"
+        presence_topic = "conversation:#{conversation_id}"
+
+        socket =
+          if connected?(socket) do
+            socket
+            |> cancel_async(:fetch_messages)
+            |> leave_conversation(current_user.id)
+          else
+            socket
+          end
+
+        socket =
+          socket
+          |> assign(:conversation, conversation)
+          |> assign(:agents, [])
+          |> assign(:is_admin, false)
+          |> assign(:can_change_status, false)
+          |> assign(:message_topic, message_topic)
+          |> assign(:meta_topic, meta_topic)
+          |> assign(:presence_topic, presence_topic)
+          |> AshDeskWeb.TypingIndicator.setup_typing(conversation_id)
+          |> assign(:online_users, %{})
+          |> assign(:message_input_id, 0)
+          |> assign(:message_form, to_form(%{"body" => ""}, id: "send-message-form"))
+          |> stream(:messages, [], reset: true)
+
+        socket =
+          if connected?(socket) do
+            join_conversation(
+              socket,
+              current_user,
+              message_topic,
+              meta_topic,
+              presence_topic,
+              conversation_id,
+              org
+            )
+          else
+            socket
+          end
+
         {:noreply, socket}
 
-      org ->
-        current_user = socket.assigns.current_user
-
-        case AshDesk.Support.get_conversation_by_id(
-               conversation_id,
-               actor: current_user,
-               tenant: org.id
-             ) do
-          {:ok, conversation} ->
-            message_topic = "conversation:messages:#{conversation_id}"
-            meta_topic = "conversation:meta:#{conversation_id}"
-            presence_topic = "conversation:#{conversation_id}"
-
-            socket =
-              if connected?(socket) do
-                socket
-                |> cancel_async(:fetch_messages)
-                |> leave_conversation(current_user.id)
-              else
-                socket
-              end
-
-            socket =
-              socket
-              |> assign(:conversation, conversation)
-              |> assign(:agents, [])
-              |> assign(:is_admin, false)
-              |> assign(:can_change_status, false)
-              |> assign(:message_topic, message_topic)
-              |> assign(:meta_topic, meta_topic)
-              |> assign(:presence_topic, presence_topic)
-              |> AshDeskWeb.TypingIndicator.setup_typing(conversation_id)
-              |> assign(:online_users, %{})
-              |> assign(:message_input_id, 0)
-              |> assign(:message_form, to_form(%{"body" => ""}, id: "send-message-form"))
-              |> stream(:messages, [], reset: true)
-
-            socket =
-              if connected?(socket) do
-                join_conversation(
-                  socket,
-                  current_user,
-                  message_topic,
-                  meta_topic,
-                  presence_topic,
-                  conversation_id,
-                  org
-                )
-              else
-                socket
-              end
-
-            {:noreply, socket}
-
-          {:error, _reason} ->
-            {:noreply,
-             socket
-             |> put_flash(:error, "Conversation not found")
-             |> push_navigate(to: ~p"/inbox")}
-        end
+      {:error, _reason} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Conversation not found")
+         |> push_navigate(to: ~p"/#{org.slug}/inbox")}
     end
   end
 

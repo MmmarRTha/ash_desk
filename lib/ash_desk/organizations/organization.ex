@@ -14,6 +14,10 @@ defmodule AshDesk.Organizations.Organization do
   actions do
     defaults [:read, :destroy]
 
+    read :get_by_slug do
+      get_by :slug
+    end
+
     create :create do
       primary? true
       accept [:name]

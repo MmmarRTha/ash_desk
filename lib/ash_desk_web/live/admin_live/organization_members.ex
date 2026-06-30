@@ -16,10 +16,10 @@ defmodule AshDeskWeb.AdminLive.OrganizationMembers do
     {:noreply, load_org(socket, params)}
   end
 
-  defp load_org(socket, %{"id" => org_id}) do
+  defp load_org(socket, %{"slug" => slug}) do
     current_user = socket.assigns.current_user
 
-    org = AshDesk.Organizations.get_organization_by_id!(org_id, actor: current_user)
+    org = AshDesk.Organizations.get_organization_by_slug!(slug, actor: current_user)
 
     memberships =
       AshDesk.Organizations.list_memberships!(

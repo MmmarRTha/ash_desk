@@ -9,19 +9,10 @@ defmodule AshDeskWeb.ChatLive.Show do
   on_mount {AshDeskWeb.LiveUserAuth, :current_user}
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(%{"org_slug" => slug}, _session, socket) do
     current_user = socket.assigns.current_user
-
-    case AshDesk.Organizations.list_organizations(actor: current_user) do
-      {:ok, [org | _]} ->
-        {:ok, assign(socket, :org, org)}
-
-      _ ->
-        {:ok,
-         socket
-         |> assign(:org, nil)
-         |> assign(:org_missing, true)}
-    end
+    org = AshDesk.Organizations.get_organization_by_slug!(slug, actor: current_user)
+    {:ok, assign(socket, :org, org)}
   end
 
   @impl true
@@ -33,7 +24,7 @@ defmodule AshDeskWeb.ChatLive.Show do
         <div class="flex items-center justify-between mb-4 shrink-0">
           <div class="flex items-center gap-3">
             <.link
-              navigate={~p"/chat"}
+              navigate={~p"/#{@org.slug}/chat"}
               class="btn btn-ghost btn-sm btn-circle"
             >
               <.icon name="hero-arrow-left" class="size-5" />
@@ -78,77 +69,64 @@ defmodule AshDeskWeb.ChatLive.Show do
   end
 
   @impl true
-  def handle_params(_params, _uri, %{assigns: %{org_missing: true}} = socket) do
-    {:noreply,
-     socket
-     |> put_flash(:error, "No organization found")
-     |> push_navigate(to: ~p"/pending")}
-  end
+  def handle_params(%{"org_slug" => _slug, "id" => conversation_id}, _uri, socket) do
+    org = socket.assigns.org
+    current_user = socket.assigns.current_user
 
-  @impl true
-  def handle_params(%{"id" => conversation_id}, _uri, socket) do
-    case socket.assigns[:org] do
-      nil ->
+    case AshDesk.Support.get_conversation_by_id(
+           conversation_id,
+           actor: current_user,
+           tenant: org.id
+         ) do
+      {:ok, conversation} ->
+        message_topic = "conversation:messages:#{conversation_id}"
+        meta_topic = "conversation:meta:#{conversation_id}"
+        presence_topic = "conversation:#{conversation_id}"
+
+        socket =
+          if connected?(socket) do
+            socket
+            |> cancel_async(:fetch_messages)
+            |> leave_conversation(current_user.id)
+          else
+            socket
+          end
+
+        socket =
+          socket
+          |> assign(:page_title, conversation.subject || "Conversation")
+          |> assign(:conversation, conversation)
+          |> assign(:message_topic, message_topic)
+          |> assign(:meta_topic, meta_topic)
+          |> assign(:presence_topic, presence_topic)
+          |> AshDeskWeb.TypingIndicator.setup_typing(conversation_id)
+          |> assign(:online_users, %{})
+          |> assign(:message_input_id, 0)
+          |> assign(:message_form, to_form(%{"body" => ""}, id: "send-message-form"))
+          |> stream(:messages, [], reset: true)
+
+        socket =
+          if connected?(socket) do
+            join_conversation(
+              socket,
+              current_user,
+              message_topic,
+              meta_topic,
+              presence_topic,
+              conversation_id,
+              org
+            )
+          else
+            socket
+          end
+
         {:noreply, socket}
 
-      org ->
-        current_user = socket.assigns.current_user
-
-        case AshDesk.Support.get_conversation_by_id(
-               conversation_id,
-               actor: current_user,
-               tenant: org.id
-             ) do
-          {:ok, conversation} ->
-            message_topic = "conversation:messages:#{conversation_id}"
-            meta_topic = "conversation:meta:#{conversation_id}"
-            presence_topic = "conversation:#{conversation_id}"
-
-            socket =
-              if connected?(socket) do
-                socket
-                |> cancel_async(:fetch_messages)
-                |> leave_conversation(current_user.id)
-              else
-                socket
-              end
-
-            socket =
-              socket
-              |> assign(:page_title, conversation.subject || "Conversation")
-              |> assign(:conversation, conversation)
-              |> assign(:message_topic, message_topic)
-              |> assign(:meta_topic, meta_topic)
-              |> assign(:presence_topic, presence_topic)
-              |> AshDeskWeb.TypingIndicator.setup_typing(conversation_id)
-              |> assign(:online_users, %{})
-              |> assign(:message_input_id, 0)
-              |> assign(:message_form, to_form(%{"body" => ""}, id: "send-message-form"))
-              |> stream(:messages, [], reset: true)
-
-            socket =
-              if connected?(socket) do
-                join_conversation(
-                  socket,
-                  current_user,
-                  message_topic,
-                  meta_topic,
-                  presence_topic,
-                  conversation_id,
-                  org
-                )
-              else
-                socket
-              end
-
-            {:noreply, socket}
-
-          {:error, _reason} ->
-            {:noreply,
-             socket
-             |> put_flash(:error, "Conversation not found")
-             |> push_navigate(to: ~p"/chat")}
-        end
+      {:error, _reason} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Conversation not found")
+         |> push_navigate(to: ~p"/#{org.slug}/chat")}
     end
   end
 

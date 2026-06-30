@@ -103,7 +103,14 @@
       <!-- Role navigation cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
         <!-- Agent / Admin card -->
-        <.link navigate={~p"/inbox"} class="group block">
+        <.link
+          navigate={
+            if @current_user && @org_slug,
+              do: ~p"/#{@org_slug}/inbox",
+              else: ~p"/sign-in"
+          }
+          class="group block"
+        >
           <div class="relative p-5 sm:p-8 rounded-box bg-base-200 glass border border-base-300 transition-all duration-200 group-hover:border-primary/50 group-hover:shadow-lg group-hover:shadow-primary/5 group-hover:-translate-y-1 overflow-hidden">
             <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 transition-all duration-300 group-hover:bg-primary/10 group-hover:scale-110" />
             <div class="relative">
@@ -133,7 +140,14 @@
         </.link>
 
         <!-- Customer card -->
-        <.link navigate={~p"/chat"} class="group block">
+        <.link
+          navigate={
+            if @current_user && @org_slug,
+              do: ~p"/#{@org_slug}/chat",
+              else: ~p"/sign-in"
+          }
+          class="group block"
+        >
           <div class="relative p-5 sm:p-8 rounded-box bg-base-200 glass border border-base-300 transition-all duration-200 group-hover:border-primary/50 group-hover:shadow-lg group-hover:shadow-primary/5 group-hover:-translate-y-1 overflow-hidden">
             <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 transition-all duration-300 group-hover:bg-primary/10 group-hover:scale-110" />
             <div class="relative">
