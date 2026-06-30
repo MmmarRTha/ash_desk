@@ -79,7 +79,7 @@ defmodule AshDeskWeb.AdminLive.Index do
                   <td class="text-sm opacity-60">{relative_time(entry.org.created_at)}</td>
                   <td>
                     <.link
-                      navigate={~p"/admin/organizations/#{entry.org.id}/members"}
+                      navigate={~p"/admin/#{entry.org.slug}/members"}
                       class="btn btn-ghost btn-xs"
                     >
                       Manage Members

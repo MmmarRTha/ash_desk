@@ -55,13 +55,13 @@ defmodule AshDeskWeb.AuthController do
 
   defp default_path_for(user) do
     case Ash.load(user, :org_role, actor: user) do
-      {:ok, user} ->
-        case user.org_role do
-          :admin -> ~p"/inbox"
-          :agent -> ~p"/inbox"
-          :customer -> ~p"/chat"
-          :none -> ~p"/pending"
-        end
+      {:ok, %{org_role: role} = user} when role in [:admin, :agent] ->
+        [org | _] = AshDesk.Organizations.list_organizations!(actor: user)
+        ~p"/#{org.slug}/inbox"
+
+      {:ok, %{org_role: :customer}} ->
+        [org | _] = AshDesk.Organizations.list_organizations!(actor: user)
+        ~p"/#{org.slug}/chat"
 
       _ ->
         ~p"/pending"

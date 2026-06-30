@@ -8,23 +8,45 @@ defmodule AshDeskWeb.ChatLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    socket = assign(socket, page_title: "Support")
+    {:ok, assign(socket, page_title: "Support")}
+  end
+
+  @impl true
+  def handle_params(%{"org_slug" => slug}, _uri, socket) do
+    current_user = socket.assigns.current_user
+
+    org = AshDesk.Organizations.get_organization_by_slug!(slug, actor: current_user)
+
+    socket =
+      socket
+      |> assign(:org, org)
+      |> stream(:conversations, [], reset: true)
 
     socket =
       if connected?(socket) do
-        current_user = socket.assigns.current_user
-
-        socket
-        |> assign(:org, nil)
-        |> stream(:conversations, [])
-        |> start_async(:fetch_portal, fn -> fetch_portal_data(current_user) end)
+        topic = "org:conversations:#{org.id}"
+        Phoenix.PubSub.subscribe(AshDesk.PubSub, topic)
+        assign(socket, :conversation_topic, topic)
       else
-        socket
-        |> assign(:org, nil)
-        |> stream(:conversations, [])
+        assign(socket, :conversation_topic, nil)
       end
 
-    {:ok, socket}
+    socket =
+      if connected?(socket) do
+        start_async(socket, :load_customer_conversations, fn ->
+          {:ok, conversations} =
+            AshDesk.Support.list_conversations_for_customer(current_user.id,
+              actor: current_user,
+              tenant: org.id
+            )
+
+          conversations
+        end)
+      else
+        socket
+      end
+
+    {:noreply, socket}
   end
 
   @impl true
@@ -59,7 +81,7 @@ defmodule AshDeskWeb.ChatLive.Index do
             id={id}
             class="card bg-base-200 hover:bg-base-300 transition-colors cursor-pointer mb-3 border border-base-300 hover:border-primary/30"
           >
-            <.link navigate={~p"/chat/#{conversation.id}"} class="block p-4">
+            <.link navigate={~p"/#{@org.slug}/chat/#{conversation.id}"} class="block p-4">
               <div class="flex items-center gap-3">
                 <div class="flex items-center justify-center shrink-0 bg-primary text-primary-content rounded-full w-8 h-8">
                   <.icon name="hero-chat-bubble-left-ellipsis" class="size-5" />
@@ -93,66 +115,35 @@ defmodule AshDeskWeb.ChatLive.Index do
   end
 
   @impl true
-  def handle_params(_params, _uri, socket) do
-    {:noreply, socket}
-  end
-
-  @impl true
   def handle_event("start_conversation", %{"subject" => subject}, socket) do
     current_user = socket.assigns.current_user
     org = socket.assigns.org
 
-    if org do
-      case AshDesk.Support.create_conversation_by_customer(
-             subject,
-             %{organization_id: org.id},
-             actor: current_user,
-             tenant: org.id
-           ) do
-        {:ok, conversation} ->
-          {:noreply,
-           socket
-           |> put_flash(:info, "Conversation started!")
-           |> push_navigate(to: ~p"/chat/#{conversation.id}")}
+    case AshDesk.Support.create_conversation_by_customer(
+           subject,
+           %{organization_id: org.id},
+           actor: current_user,
+           tenant: org.id
+         ) do
+      {:ok, conversation} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Conversation started!")
+         |> push_navigate(to: ~p"/#{org.slug}/chat/#{conversation.id}")}
 
-        {:error, reason} ->
-          {:noreply,
-           put_flash(socket, :error, "Failed to start conversation: #{inspect(reason)}")}
-      end
-    else
-      {:noreply, put_flash(socket, :error, "No organization found")}
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, "Failed to start conversation: #{inspect(reason)}")}
     end
   end
 
   @impl true
-  def handle_async(:fetch_portal, {:ok, %{org: org, conversations: conversations}}, socket) do
-    socket =
-      socket
-      |> assign(:org, org)
-      |> stream(:conversations, conversations, reset: true)
-
-    socket =
-      if connected?(socket) and org do
-        topic = "org:conversations:#{org.id}"
-        Phoenix.PubSub.subscribe(AshDesk.PubSub, topic)
-        assign(socket, :conversation_topic, topic)
-      else
-        assign(socket, :conversation_topic, nil)
-      end
-
-    socket =
-      if connected?(socket) and is_nil(org) do
-        push_navigate(socket, to: ~p"/pending")
-      else
-        socket
-      end
-
-    {:noreply, socket}
+  def handle_async(:load_customer_conversations, {:ok, conversations}, socket) do
+    {:noreply, stream(socket, :conversations, conversations, reset: true)}
   end
 
-  def handle_async(:fetch_portal, {:exit, reason}, socket) do
+  def handle_async(:load_customer_conversations, {:exit, reason}, socket) do
     require Logger
-    Logger.error("fetch_portal failed: #{inspect(reason)}")
+    Logger.error("load_customer_conversations failed: #{inspect(reason)}")
     {:noreply, socket}
   end
 
@@ -172,10 +163,5 @@ defmodule AshDeskWeb.ChatLive.Index do
       end
 
     {:noreply, stream_insert(socket, :conversations, conversation, at: 0)}
-  end
-
-  defp fetch_portal_data(current_user) do
-    {:ok, portal} = AshDesk.Support.load_customer_portal(current_user)
-    portal
   end
 end
