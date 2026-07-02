@@ -147,24 +147,14 @@ defmodule AshDeskWeb.ChatLive.Show do
     {:noreply, put_flash(socket, :error, "Failed to load conversation. Please try again.")}
   end
 
-  defp fetch_conversation_data(conversation_id, current_user, org) do
-    with {:ok, messages} <-
-           AshDesk.Support.list_messages_for_conversation(
-             %{conversation_id: conversation_id},
-             actor: current_user
-           ),
-         {:ok, memberships} <-
-           AshDesk.Organizations.list_memberships(
-             actor: current_user,
-             tenant: org.id,
-             load: [:user]
-           ) do
-      {:ok,
-       %{
-         messages: messages,
-         agents: Enum.map(memberships, & &1.user),
-         is_admin: Enum.any?(memberships, &(&1.user_id == current_user.id and &1.role == :admin))
-       }}
+  # What it should be:
+  defp fetch_conversation_data(conversation_id, current_user, _org) do
+    case AshDesk.Support.list_messages_for_conversation(
+           %{conversation_id: conversation_id},
+           actor: current_user
+         ) do
+      {:ok, messages} -> {:ok, %{messages: messages}}
+      error -> error
     end
   end
 end
