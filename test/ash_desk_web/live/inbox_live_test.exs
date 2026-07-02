@@ -39,13 +39,18 @@ defmodule AshDeskWeb.InboxLiveTest do
   describe "index" do
     setup [:create_user_and_org]
 
-    test "redirects to sign-in when not authenticated", %{conn: conn} do
-      assert {:error, {:redirect, %{to: "/sign-in"}}} = live(conn, ~p"/inbox")
+    test "redirects to sign-in when not authenticated", %{conn: conn, org: org} do
+      assert {:error, {:redirect, %{to: "/sign-in"}}} = live(conn, ~p"/#{org.slug}/inbox")
     end
 
-    test "lists conversations in the inbox", %{conn: conn, user: user, conversation: conversation} do
+    test "lists conversations in the inbox", %{
+      conn: conn,
+      user: user,
+      conversation: conversation,
+      org: org
+    } do
       conn = sign_in(conn, user)
-      {:ok, view, _html} = live(conn, ~p"/inbox")
+      {:ok, view, _html} = live(conn, ~p"/#{org.slug}/inbox")
 
       html = render_async(view)
 
@@ -57,7 +62,12 @@ defmodule AshDeskWeb.InboxLiveTest do
   describe "show" do
     setup [:create_user_and_org]
 
-    test "shows conversation messages", %{conn: conn, user: user, conversation: conversation} do
+    test "shows conversation messages", %{
+      conn: conn,
+      user: user,
+      conversation: conversation,
+      org: org
+    } do
       {:ok, _message} =
         Support.create_message(
           %{body: "Hello! Need help.", conversation_id: conversation.id},
@@ -65,19 +75,24 @@ defmodule AshDeskWeb.InboxLiveTest do
         )
 
       conn = sign_in(conn, user)
-      {:ok, view, _html} = live(conn, ~p"/inbox/#{conversation.id}")
+      {:ok, view, _html} = live(conn, ~p"/#{org.slug}/inbox/#{conversation.id}")
 
       html = render_async(view)
 
-      assert has_element?(view, ~s/a[href="#{~p"/inbox"}"]/)
+      assert has_element?(view, ~s/a[href="#{~p"/#{org.slug}/inbox"}"]/)
       assert html =~ "Hello! Need help."
       assert html =~ "You"
       assert has_element?(view, "#send-message-form")
     end
 
-    test "user can send a message", %{conn: conn, user: user, conversation: conversation} do
+    test "user can send a message", %{
+      conn: conn,
+      user: user,
+      conversation: conversation,
+      org: org
+    } do
       conn = sign_in(conn, user)
-      {:ok, view, _html} = live(conn, ~p"/inbox/#{conversation.id}")
+      {:ok, view, _html} = live(conn, ~p"/#{org.slug}/inbox/#{conversation.id}")
 
       render_async(view)
 
@@ -88,11 +103,12 @@ defmodule AshDeskWeb.InboxLiveTest do
       assert has_element?(view, ".chat-bubble", "New message body")
     end
 
-    test "redirects to inbox for non-existent conversation", %{conn: conn, user: user} do
+    test "redirects to inbox for non-existent conversation", %{conn: conn, user: user, org: org} do
       conn = sign_in(conn, user)
+      inbox_path = ~p"/#{org.slug}/inbox"
 
-      assert {:error, {:live_redirect, %{to: "/inbox"}}} =
-               live(conn, ~p"/inbox/non-existent-id")
+      assert {:error, {:live_redirect, %{to: ^inbox_path}}} =
+               live(conn, ~p"/#{org.slug}/inbox/non-existent-id")
     end
   end
 end
