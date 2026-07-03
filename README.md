@@ -137,30 +137,31 @@ Messages use `stream_insert` instead of reassigning the full list. When a new me
 
 
 
-## Architecture
+## Architecture:
 
+```mermaid
 flowchart TB
-  subgraph clients [Browser]
-    AgentUI[Agent Inbox]
-    CustomerUI[Customer Chat]
+  subgraph clients ["Browser"]
+    AgentUI["Agent Inbox"]
+    CustomerUI["Customer Chat"]
   end
 
-  subgraph phoenix [Phoenix LiveView]
-    LV[LiveViews + Streams]
-    Presence[Phoenix.Presence]
-    Typing[TypingServer GenServer]
+  subgraph phoenix ["Phoenix LiveView"]
+    LV["LiveViews + Streams"]
+    Presence["Phoenix.Presence"]
+    Typing["TypingServer GenServer"]
   end
 
-  subgraph ash [Ash Framework]
-    Accounts[Accounts Domain]
-    Orgs[Organizations Domain]
-    Support[Support Domain]
-    Policies[Policy Authorizer]
-    PubSubNotifier[Ash.Notifier.PubSub]
+  subgraph ash ["Ash Framework"]
+    Accounts["Accounts Domain"]
+    Orgs["Organizations Domain"]
+    Support["Support Domain"]
+    Policies["Policy Authorizer"]
+    PubSubNotifier["Ash.Notifier.PubSub"]
   end
 
-  subgraph data [PostgreSQL]
-    DB[(Multi-tenant tables)]
+  subgraph data ["PostgreSQL"]
+    DB[("Multi-tenant tables")]
   end
 
   AgentUI --> LV
@@ -171,6 +172,7 @@ flowchart TB
   PubSubNotifier --> LV
   Presence --> LV
   Typing --> LV
+```
 
 Three Ash domains keep concerns separated:
 
