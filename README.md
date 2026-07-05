@@ -34,13 +34,18 @@ Built to demonstrate production-oriented Ash Framework: domain-driven design, de
 
 
 
-### For support agents and admins
+### For support agents
 
 - **Live inbox updates** when customers open new conversations
-- **Agent assignment** (admin)
+- **Agent assignment** — take ownership of customer conversations
 - **Status workflow**: `open` → `pending` → `resolved`
 - **Online presence** — see who is in the conversation
 - **Typing indicators** — realtime "user is typing…"
+
+### For support admins
+
+- **Admin panel** at `/admin/:slug/members` — manage organization members, assign roles, remove users
+- **Full conversation control** — delete any conversation (agents cannot)
 
 
 
@@ -108,8 +113,6 @@ A user can be `admin` in one organization and `customer` in another. Ash's `Poli
 - **Create conversations**: any organization member
 - **Update/destroy**: admins only
 - **Change status**: admins and agents
-
-The bypass for `AshAuthentication.Checks.AshAuthenticationInteraction` ensures auth flows (sign in, register, confirm) are always permitted without role checks.
 
 ### 3. LiveView streams for zero-overhead chat
 
