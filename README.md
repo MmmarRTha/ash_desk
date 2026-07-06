@@ -86,11 +86,7 @@ This project uses [Ash Framework](https://ash-hq.org/) instead of plain Ecto. Th
 
 ---
 
-
-
 ## Key Challenges & Solutions
-
-
 
 ### 1. Race-condition-free typing indicators
 
@@ -133,8 +129,6 @@ Messages use `stream_insert` instead of reassigning the full list. When a new me
 | Database | PostgreSQL                                         |
 | Realtime | Phoenix PubSub, Phoenix.Presence, LiveView streams |
 | UI       | Tailwind CSS v4, DaisyUI, Heroicons                |
-| Tables   | Cinder                                             |
-
 
 ---
 
@@ -180,9 +174,9 @@ flowchart TB
 Three Ash domains keep concerns separated:
 
 ```
-Accounts/      → User auth (AshAuthentication, JWT tokens)
-Organizations/ → Multi-tenancy (Organization, Membership roles)
-Support/       → Product (Conversation, Message + PubSub notifiers)
+Accounts     → User auth (AshAuthentication, JWT tokens)
+Organizations → Multi-tenancy (Organization, Membership roles)
+Support       → Product (Conversation, Message + PubSub notifiers)
 ```
 
 **Multi-tenancy** uses Ash's attribute strategy — all support data is scoped by `organization_id`.
@@ -260,44 +254,28 @@ mix phx.server
 
 Visit [http://localhost:4000](http://localhost:4000)
 
-### Demo accounts
+### Demo Credentials
 
 Seeded organization: **KATS Inc** (`/kats-inc`)
 
 
-| Role  | Email                | Password      | URL               |
-| ----- | -------------------- | ------------- | ----------------- |
-| Admin | `admin@kats-inc.com` | `password123` | `/kats-inc/inbox` |
-
-
-Sign in as admin to open the inbox, manage members at `/admin/kats-inc/members`, and assign agent or customer roles to other seeded users (`agent1@kats-inc.com`, `customer@kats-inc.com`).
+| Roles     | Email                   | Password      | URL               |
+| -----     | --------------------    | ------------- | ----------------- |
+| Admin     | `admin@kats-inc.com`    | `password123` | `/kats-inc/inbox` |
+| Agent     | `agent1@kats-inc.com`   | `password123` | `/kats-inc/inbox` |
+| Customer  | `customer@kats-inc.com` | `password123` | `/kats-inc/chat` |
 
 **Tip:** open agent and customer sessions in two browsers to demo realtime chat side by side.
 
 ---
 
-
-
-## Testing
-
-```bash
-mix test
-mix precommit   # compile → format → test
-```
-
----
-
-
-
 ## Author
 
-**Martha M. Nieto** — [GitHub](https://github.com/marthanieto) · [LinkedIn](https://linkedin.com/in/marthanieto)
+**Martha M. Nieto**
 
-Built with Elixir, Phoenix, Ash Framework, and a lot of coffee.
+Built with Elixir, Phoenix, and Ash Framework.
 
 ---
-
-
 
 ## License
 
