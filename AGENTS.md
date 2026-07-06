@@ -10,10 +10,32 @@ Phoenix + Ash project. MVP Multi-tenant realtime support inbox.
 ## Resources
 - `lib/ash_desk/<domain>/` — resource definitions
 - `lib/ash_desk/<domain>.ex` — domain modules with code interfaces
-- `config/test.exs`: note duplicate `username`/`password` keys
-- Repos, extensions: `AshDesk.Repo` uses `AshPostgres.Repo` with `ash-functions` + `citext`
+- `lib/ash_desk/<domain>/changes/` — custom change modules
+- `lib/ash_desk/repo.ex` — `AshPostgres.Repo` with `ash-functions` + `citext` extensions, PG >= 16
+- All domains use `AshAdmin.Domain` extension (dev routes at `/admin`) at `config/config.exs:60`
+- Organizations use `AshSlug` extension for auto-slugging names at `lib/ash_desk/organizations/organization.ex:7`
+- Realtime via `Phoenix.PubSub` + `Ash.Notifier.PubSub`; LiveViews refresh with `Cinder.Refresh.refresh_table/2`
 
-This is a web application written using the Phoenix web framework.
+## Developer commands
+- `mix setup` — deps, ash setup, assets build, seeds
+- `mix phx.server` — dev server
+- `mix precommit` — `compile --warnings-as-errors` → `deps.unlock --unused` → `format` → `test`
+- `mix ash.codegen --dev` — dev migration workflow (iterative); `mix ash.codegen <name>` — final named migration
+- `mix ash.migrate` — run pending migrations
+
+## Testing
+- DB: `ash_desk_test#{MIX_TEST_PARTITION}`, sandbox pool, auth via `config/test.exs`
+- `AshDesk.DataCase` for database tests with `async: true` support at `test/support/data_case.ex`
+- `AshDeskWeb.ConnCase` for controller tests at `test/support/conn_case.ex`
+- Use globally unique values (`System.unique_integer([:positive])`) for identity fields in concurrent tests
+- `config :ash, policies: [show_policy_breakdowns?: true], disable_async?: true` in test
+
+## Notable dependencies
+- **Cinder** — data table/list/grid component (configured with `daisy_ui` theme globally)
+- **daisyUI** — Tailwind v4 plugin, themes: `caramellatte` (light/default), `coffee` (dark/prefersdark)
+- **AshAuthentication** — password, magic_link, remember_me; tokens with `AshDesk.Secrets`
+- **AshAdmin** — dev resource admin UI at `/admin`
+- **AshSlug** — auto-slug generation on Organization
 
 ## Project guidelines
 
@@ -23,7 +45,7 @@ This is a web application written using the Phoenix web framework.
 ### Phoenix v1.8 guidelines
 
 - **Always** begin your LiveView templates with `<Layouts.app flash={@flash} ...>` which wraps all inner content
-- The `MyAppWeb.Layouts` module is aliased in the `my_app_web.ex` file, so you can use it without needing to alias it again
+- The `AshDeskWeb.Layouts` module is aliased in `lib/ash_desk_web.ex:92`, so you can use it without needing to alias it again
 - Anytime you run into errors with no `current_scope` assign:
   - You failed to follow the Authenticated Routes guidelines, or you failed to pass `current_scope` to `<Layouts.app>`
   - **Always** fix the `current_scope` error by moving your routes to the proper `live_session` and ensure you pass `current_scope` as needed
@@ -41,7 +63,7 @@ custom classes must fully style the input
       @import "tailwindcss" source(none);
       @source "../css";
       @source "../js";
-      @source "../../lib/my_app_web";
+      @source "../../lib/ash_desk_web";
 
 - **Always use and maintain this import syntax** in the app.css file for projects generated with `phx.new`
 - **Never** use `@apply` when writing raw css
