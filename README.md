@@ -246,7 +246,7 @@ lib/
 ### Setup
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ash_desk.git
+git clone 
 cd ash_desk
 mix setup
 mix phx.server
