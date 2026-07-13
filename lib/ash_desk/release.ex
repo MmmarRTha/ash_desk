@@ -23,7 +23,7 @@ defmodule AshDesk.Release do
 
     import Ash.Query
 
-    case Ash.read(AshDesk.Accounts.User) do
+    case Ash.read(AshDesk.Accounts.User, authorize?: false) do
       {:ok, []} ->
         IO.puts("Running seeds...")
         do_seed()
