@@ -21,8 +21,6 @@ defmodule AshDesk.Release do
   def seed do
     {:ok, _} = Application.ensure_all_started(@app)
 
-    import Ash.Query
-
     case Ash.read(AshDesk.Accounts.User, authorize?: false) do
       {:ok, []} ->
         IO.puts("Running seeds...")

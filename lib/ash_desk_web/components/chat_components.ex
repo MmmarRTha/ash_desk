@@ -191,7 +191,7 @@ defmodule AshDeskWeb.ChatComponents do
           field={@form[:body]}
           type="textarea"
           placeholder={@placeholder}
-          class="w-full pr-12 p-2 py-3 bg-white rounded-md text-black"
+          class="w-full pr-12 p-2 py-3 bg-white rounded-full text-black text-base"
           phx-hook="TypingIndicator"
           rows="1"
         />
