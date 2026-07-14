@@ -11,8 +11,15 @@
 
 
 ---
-
-
+![AshDesk Screenshot 1](https://res.cloudinary.com/y6kavwel/image/upload/v1783986887/Screenshot_20260713_161427_rze4pn.png)
+![AshDesk Screenshot 2](https://res.cloudinary.com/y6kavwel/image/upload/v1783986887/Screenshot_20260713_161457_o3ruhk.png)
+![AshDesk Screenshot 3](https://res.cloudinary.com/y6kavwel/image/upload/v1783986887/Screenshot_20260713_161523_cwgjch.png)
+![AshDesk Screenshot 4](https://res.cloudinary.com/y6kavwel/image/upload/v1783986887/Screenshot_20260713_161741_heedeq.png)
+![AshDesk Screenshot 5](https://res.cloudinary.com/y6kavwel/image/upload/v1783986888/Screenshot_20260713_162010_vyzq0a.png)
+![AshDesk Screenshot 6](https://res.cloudinary.com/y6kavwel/image/upload/v1783986887/Screenshot_20260713_162227_mdodgt.png)
+![AshDesk Screenshot 7](https://res.cloudinary.com/y6kavwel/image/upload/v1783986887/Screenshot_20260713_162511_xsob1r.png)
+![AshDesk Screenshot 8](https://res.cloudinary.com/y6kavwel/image/upload/v1783986887/Screenshot_20260713_162747_yhfshv.png)
+![AshDesk Screenshot 9](https://res.cloudinary.com/y6kavwel/image/upload/v1783986887/Screenshot_20260713_162907_iwpwwj.png)
 
 ## Overview
 
@@ -256,14 +263,19 @@ Visit [http://localhost:4000](http://localhost:4000)
 
 ### Demo Credentials
 
-Seeded organization: **KATS Inc** (`/kats-inc`)
+Seeded organizations: 
+**KATS Inc** (`/kats-inc`) and 
+**MICHI Corp** (`/michi-corp`)
 
 
-| Roles     | Email                   | Password      | URL               |
-| -----     | --------------------    | ------------- | ----------------- |
-| Admin     | `admin@kats-inc.com`    | `password123` | `/kats-inc/inbox` |
-| Agent     | `agent1@kats-inc.com`   | `password123` | `/kats-inc/inbox` |
-| Customer  | `customer@kats-inc.com` | `password123` | `/kats-inc/chat` |
+| Roles    | Organization | Email                    | Password      | URL                 |
+| -----    | ------------ | --------------------     | ------------- | -----------------   |
+| Admin    | KATS Inc     | `admin@kats-inc.com`     | `password123` | `/kats-inc/inbox`   |
+| Agent    | KATS Inc     | `agent1@kats-inc.com`    | `password123` | `/kats-inc/inbox`   |
+| Customer | KATS Inc     | `customer@kats-inc.com`  | `password123` | `/kats-inc/chat`    |
+| Admin    | MICHI Corp   | `admin@michi-corp.com`   | `password123` | `/michi-corp/inbox` |
+| Agent    | MICHI Corp   | `agent1@michi-corp.com`  | `password123` | `/michi-corp/inbox` |
+| Customer | MICHI Corp   | `customer@michi-corp.com`| `password123` | `/michi-corp/chat`  |
 
 **Tip:** open agent and customer sessions in two browsers to demo realtime chat side by side.
 
