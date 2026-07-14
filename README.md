@@ -11,7 +11,15 @@
 
 
 ---
-
+<img width="1920" height="1080" alt="Screenshot_20260713_161427" src="https://github.com/user-attachments/assets/e37e579d-a6ea-47a0-9d10-6c808a2fdd3d" />
+<img width="1920" height="1080" alt="Screenshot_20260713_161457" src="https://github.com/user-attachments/assets/67aac067-067e-4334-9848-e061e8accb3d" />
+<img width="1920" height="1080" alt="Screenshot_20260713_161523" src="https://github.com/user-attachments/assets/458ef180-3f9d-4572-817b-a4113a79f70c" />
+<img width="1920" height="1080" alt="Screenshot_20260713_161741" src="https://github.com/user-attachments/assets/866e2f63-3343-4636-9d0a-6e047d900267" />
+<img width="1920" height="1080" alt="Screenshot_20260713_162010" src="https://github.com/user-attachments/assets/3db0c549-a217-4fab-a4a5-4bd524620ec2" />
+<img width="1921" height="1081" alt="Screenshot_20260713_162227" src="https://github.com/user-attachments/assets/e0e76df6-828f-48c5-bb46-adfcab49e64a" />
+<img width="1920" height="1080" alt="Screenshot_20260713_162511" src="https://github.com/user-attachments/assets/3cd6142a-5bf8-4164-8d73-fce7cabf2fe5" />
+<img width="1920" height="1080" alt="Screenshot_20260713_162747" src="https://github.com/user-attachments/assets/42b45d2b-a983-430a-9f96-b12fefd6cb9a" />
+<img width="1920" height="1080" alt="Screenshot_20260713_162907" src="https://github.com/user-attachments/assets/4684ca8a-e7e9-4342-bb95-d0c95ccbdb4b" />
 
 
 ## Overview
@@ -256,14 +264,19 @@ Visit [http://localhost:4000](http://localhost:4000)
 
 ### Demo Credentials
 
-Seeded organization: **KATS Inc** (`/kats-inc`)
+Seeded organizations: 
+**KATS Inc** (`/kats-inc`) and 
+**MICHI Corp** (`/michi-corp`)
 
 
-| Roles     | Email                   | Password      | URL               |
-| -----     | --------------------    | ------------- | ----------------- |
-| Admin     | `admin@kats-inc.com`    | `password123` | `/kats-inc/inbox` |
-| Agent     | `agent1@kats-inc.com`   | `password123` | `/kats-inc/inbox` |
-| Customer  | `customer@kats-inc.com` | `password123` | `/kats-inc/chat` |
+| Roles    | Organization | Email                    | Password      | URL                 |
+| -----    | ------------ | --------------------     | ------------- | -----------------   |
+| Admin    | KATS Inc     | `admin@kats-inc.com`     | `password123` | `/kats-inc/inbox`   |
+| Agent    | KATS Inc     | `agent1@kats-inc.com`    | `password123` | `/kats-inc/inbox`   |
+| Customer | KATS Inc     | `customer@kats-inc.com`  | `password123` | `/kats-inc/chat`    |
+| Admin    | MICHI Corp   | `admin@michi-corp.com`   | `password123` | `/michi-corp/inbox` |
+| Agent    | MICHI Corp   | `agent1@michi-corp.com`  | `password123` | `/michi-corp/inbox` |
+| Customer | MICHI Corp   | `customer@michi-corp.com`| `password123` | `/michi-corp/chat`  |
 
 **Tip:** open agent and customer sessions in two browsers to demo realtime chat side by side.
 

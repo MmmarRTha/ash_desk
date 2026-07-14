@@ -1,6 +1,6 @@
 <Layouts.flash_group flash={@flash} />
 
-<div class="relative min-h-screen overflow-hidden">
+<div class="relative min-h-screen flex flex-col">
   <!-- Decorative background -->
   <div class="absolute inset-0 -z-10">
     <svg
@@ -42,141 +42,142 @@
     </svg>
   </div>
 
-  <div class="relative px-4 py-4">
-    <div class="mx-auto max-w-5xl">
-      <!-- Navbar -->
-      <div class="navbar bg-base-200 glass rounded-box mb-4 border border-base-300 px-4">
-        <div class="flex-1">
-          <div class="flex items-center gap-2">
-            <.icon name="hero-chat-bubble-left-right" class="size-5" />
-            <h1 class="text-lg md:text-xl font-bold">AshDesk</h1>
-          </div>
-        </div>
-        <div class="flex-none flex items-center gap-2 sm:gap-4">
-          <%= if assigns[:current_user] do %>
-            <div class="flex items-center gap-2 sm:gap-4 text-sm">
-              <span class="truncate max-w-[100px] sm:max-w-none">Welcome, {@current_user.email}</span>
-              <.link
-                navigate={~p"/sign-out"}
-                class="hover:underline"
-              >
-                Sign Out
-              </.link>
-            </div>
-          <% else %>
-            <div class="flex items-center gap-4 text-sm">
-              <.link
-                navigate={~p"/sign-in"}
-                class="hover:underline font-semibold"
-              >
-                Sign in
-              </.link>
-              <.link
-                navigate={~p"/register"}
-                class="hover:underline font-semibold"
-              >
-                Create an account
-              </.link>
-              <span class="text-base-content/20">|</span>
-            </div>
-          <% end %>
-        </div>
-      </div>
-
-      <!-- Hero section -->
-      <div class="text-center mb-4 mt-5 md:my-16">
-        <div class="flex justify-center mb-4 sm:mb-8">
-          <div class="avatar placeholder">
-            <div class="w-10 md:w-16 rounded-box bg-amber-200/80 text-black">
-              <.icon name="hero-chat-bubble-left-right" class="md:size-12 my-2" />
+  <div class="flex-1 flex flex-col relative px-4 py-4">
+    <div class="mx-auto max-w-5xl w-full flex-1 flex flex-col">
+      <div class="flex-1">
+        <!-- Navbar -->
+        <div class="navbar bg-base-200 glass rounded-box mb-4 border border-base-300 px-4">
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <.icon name="hero-chat-bubble-left-right" class="size-5" />
+              <h1 class="text-lg md:text-xl font-bold">AshDesk</h1>
             </div>
           </div>
-        </div>
-        <h1 class="text-3xl md:text-5xl font-bold tracking-tight lg:text-7xl text-white">
-          Welcome to <span class="text-black">AshDesk</span>
-        </h1>
-        <p class="mt-4 text-lg sm:text-xl text-black max-w-2xl mx-auto leading-relaxed">
-          A modern support inbox for your team. Manage conversations, help customers, and keep everything organized in one place.
-        </p>
-      </div>
-
-      <!-- Role navigation cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-        <!-- Agent / Admin card -->
-        <.link
-          navigate={
-            if @current_user && @org_slug,
-              do: ~p"/#{@org_slug}/inbox",
-              else: ~p"/sign-in"
-          }
-          class="group block"
-        >
-          <div class="relative p-5 sm:p-8 rounded-box bg-base-200 glass border border-base-300 transition-all duration-200 group-hover:border-primary/50 group-hover:shadow-lg group-hover:shadow-primary/5 group-hover:-translate-y-1 overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 transition-all duration-300 group-hover:bg-primary/10 group-hover:scale-110" />
-            <div class="relative">
-              <div class="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                <div class="flex items-center justify-center size-10 sm:size-12 rounded-xl bg-primary/10">
-                  <.icon name="hero-inbox-stack" class="size-6" />
-                </div>
-                <div>
-                  <h2 class="text-xl font-bold">
-                    Support Inbox
-                  </h2>
-                  <p class="text-sm">Agents &amp; Admins</p>
-                </div>
+          <div class="flex-none flex items-center gap-2 sm:gap-4">
+            <%= if assigns[:current_user] do %>
+              <div class="flex items-center gap-2 sm:gap-4 text-sm">
+                <span class="truncate max-w-[100px] sm:max-w-none">Welcome, {@current_user.email}</span>
+                <.link
+                  navigate={~p"/sign-out"}
+                  class="hover:underline"
+                >
+                  Sign Out
+                </.link>
               </div>
-              <p class="leading-relaxed text-sm">
-                View and manage support conversations. Assign agents, update statuses, and help your customers quickly.
-              </p>
-              <span class="inline-flex items-center gap-2 mt-2 text-base font-semibold">
-                Open Inbox
-                <.icon
-                  name="hero-arrow-right"
-                  class="size-4 transition-transform duration-200 group-hover:translate-x-1"
-                />
-              </span>
-            </div>
-          </div>
-        </.link>
-
-        <!-- Customer card -->
-        <.link
-          navigate={
-            if @current_user && @org_slug,
-              do: ~p"/#{@org_slug}/chat",
-              else: ~p"/sign-in"
-          }
-          class="group block"
-        >
-          <div class="relative p-5 sm:p-8 rounded-box bg-base-200 glass border border-base-300 transition-all duration-200 group-hover:border-primary/50 group-hover:shadow-lg group-hover:shadow-primary/5 group-hover:-translate-y-1 overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 transition-all duration-300 group-hover:bg-primary/10 group-hover:scale-110" />
-            <div class="relative">
-              <div class="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                <div class="flex items-center justify-center size-10 sm:size-12 rounded-xl bg-primary/10">
-                  <.icon name="hero-chat-bubble-left-right" class="size-6" />
-                </div>
-                <div>
-                  <h2 class="text-xl font-bold">Get Help</h2>
-                  <p class="text-sm">Customers</p>
-                </div>
+            <% else %>
+              <div class="flex items-center gap-4 text-sm">
+                <.link
+                  navigate={~p"/sign-in"}
+                  class="hover:underline font-semibold"
+                >
+                  Sign in
+                </.link>
+                <.link
+                  navigate={~p"/register"}
+                  class="hover:underline font-semibold"
+                >
+                  Create an account
+                </.link>
+                <span class="text-base-content/20">|</span>
               </div>
-              <p class="leading-relaxed text-sm">
-                Start a conversation with our support team. Track your requests and get the answers you need.
-              </p>
-              <span class="inline-flex items-center gap-2 mt-2 text-base font-semibold">
-                Start Chat
-                <.icon
-                  name="hero-arrow-right"
-                  class="size-4 transition-transform duration-200 group-hover:translate-x-1"
-                />
-              </span>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Hero section -->
+        <div class="text-center mb-1 mt-2 md:my-10">
+          <div class="flex justify-center mb-2 sm:mb-8">
+            <div class="avatar placeholder">
+              <div class="w-9 md:w-16 rounded-box bg-amber-200/80 text-black">
+                <.icon name="hero-chat-bubble-left-right" class="size:2 md:size-12 my-2" />
+              </div>
             </div>
           </div>
-        </.link>
-      </div>
+          <h1 class="text-3xl md:text-5xl font-bold tracking-tight lg:text-7xl text-white">
+            Welcome to <span class="text-black">AshDesk</span>
+          </h1>
+          <p class="mt-4 text-lg sm:text-xl text-black max-w-2xl mx-auto leading-relaxed">
+            A modern support inbox for your team. Manage conversations, help customers, and keep everything organized in one place.
+          </p>
+        </div>
 
+        <!-- Role navigation cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+          <!-- Agent / Admin card -->
+          <.link
+            navigate={
+              if @current_user && @org_slug,
+                do: ~p"/#{@org_slug}/inbox",
+                else: ~p"/sign-in"
+            }
+            class="group block"
+          >
+            <div class="relative p-5 sm:p-8 rounded-box bg-base-200 glass border border-base-300 transition-all duration-200 group-hover:border-primary/50 group-hover:shadow-lg group-hover:shadow-primary/5 group-hover:-translate-y-1 overflow-hidden">
+              <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 transition-all duration-300 group-hover:bg-primary/10 group-hover:scale-110" />
+              <div class="relative">
+                <div class="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  <div class="flex items-center justify-center size-10 sm:size-12 rounded-xl bg-primary/10">
+                    <.icon name="hero-inbox-stack" class="size-6" />
+                  </div>
+                  <div>
+                    <h2 class="text-xl font-bold">
+                      Support Inbox
+                    </h2>
+                    <p class="text-sm">Agents &amp; Admins</p>
+                  </div>
+                </div>
+                <p class="leading-relaxed text-sm">
+                  View and manage support conversations. Assign agents, update statuses, and help your customers quickly.
+                </p>
+                <span class="inline-flex items-center gap-2 mt-2 text-base font-semibold">
+                  Open Inbox
+                  <.icon
+                    name="hero-arrow-right"
+                    class="size-4 transition-transform duration-200 group-hover:translate-x-1"
+                  />
+                </span>
+              </div>
+            </div>
+          </.link>
+
+          <!-- Customer card -->
+          <.link
+            navigate={
+              if @current_user && @org_slug,
+                do: ~p"/#{@org_slug}/chat",
+                else: ~p"/sign-in"
+            }
+            class="group block"
+          >
+            <div class="relative p-5 sm:p-8 rounded-box bg-base-200 glass border border-base-300 transition-all duration-200 group-hover:border-primary/50 group-hover:shadow-lg group-hover:shadow-primary/5 group-hover:-translate-y-1 overflow-hidden">
+              <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 transition-all duration-300 group-hover:bg-primary/10 group-hover:scale-110" />
+              <div class="relative">
+                <div class="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  <div class="flex items-center justify-center size-10 sm:size-12 rounded-xl bg-primary/10">
+                    <.icon name="hero-chat-bubble-left-right" class="size-6" />
+                  </div>
+                  <div>
+                    <h2 class="text-xl font-bold">Get Help</h2>
+                    <p class="text-sm">Customers</p>
+                  </div>
+                </div>
+                <p class="leading-relaxed text-sm">
+                  Start a conversation with our support team. Track your requests and get the answers you need.
+                </p>
+                <span class="inline-flex items-center gap-2 mt-2 text-base font-semibold">
+                  Start Chat
+                  <.icon
+                    name="hero-arrow-right"
+                    class="size-4 transition-transform duration-200 group-hover:translate-x-1"
+                  />
+                </span>
+              </div>
+            </div>
+          </.link>
+        </div>
+      </div>
       <!-- Footer -->
-      <footer class="footer footer-center p-3 bg-base-200 glass rounded-box mt-9 lg:mt-30">
+      <footer class="footer footer-center p-3 bg-base-200 glass rounded-box mt-8">
         <aside>
           <p class="font-bold md:ltext-base">
             AshDesk. A Modern Support Inbox
