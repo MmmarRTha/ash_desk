@@ -10,6 +10,7 @@ import Config
 config :cinder, default_theme: "daisy_ui"
 
 config :ash,
+  default_string_length_count: :codepoints,
   allow_forbidden_field_for_relationships_by_default?: true,
   include_embedded_source_by_default?: false,
   show_keysets_for_all_actions?: false,
